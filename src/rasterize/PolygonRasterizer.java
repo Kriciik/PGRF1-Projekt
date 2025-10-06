@@ -15,25 +15,17 @@ public class PolygonRasterizer {
     }
 
     public void rasterize(Polygon polygon) {
-        Point point1;
-        Point point2;
 
-            for(int i = 0; i < polygon.getPoints().size(); i++) {
-                point1 = polygon.getPoints().get(i);
+        if (polygon.getPoints().size() < 3) return;
 
-                if(point1 == polygon.getPoint(polygon.getPoints().size() - 1)) {
-                    point2 =  polygon.getPoints().getFirst();
+        for (int i = 0; i < polygon.getPoints().size(); i++) {
+            int indexA = i;
+            int indexB = (i + 1) % polygon.getPoints().size();
 
-                }else{
-                    point2 =  polygon.getPoints().get(i+1);
-                }
+            var a = polygon.getPoint(indexA);
+            var b = polygon.getPoint(indexB);
 
-                polygon.addPoint(point1);
-                polygon.addPoint(point2);
-
-                if(polygon.getPoints().size() < 3) {
-                    lineRasterizer.rasterize(point1.getX(), point1.getY(), point2.getX(), point2.getY());
-                }
+            lineRasterizer.rasterize(a.getX(), a.getY(), b.getX(), b.getY());
 
 
         }

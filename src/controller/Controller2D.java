@@ -39,14 +39,16 @@ public class Controller2D {
         panel.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                int centerX = panel.getRaster().getWidth() / 2;
-                int centerY = panel.getRaster().getHeight() / 2;
-
-                for (int x = centerX; x < panel.getRaster().getWidth(); x++) {
-                    panel.getRaster().setPixel(x, centerY, color);
+                // Omezení kliknutí mimo raster
+                if (e.getX() < 0 || e.getX() >= panel.getRaster().getWidth() ||
+                        e.getY() < 0 || e.getY() >= panel.getRaster().getHeight()) {
+                    return;
                 }
+                // vykreslení
+                point = new Point(e.getX(), e.getY());
+                polygon.addPoint(point);
 
-                panel.repaint();
+                drawScene();
             }
         });
 
@@ -60,23 +62,6 @@ public class Controller2D {
                     int centerX = panel.getRaster().getWidth() / 2;
                     int centerY = panel.getRaster().getHeight() / 2;
 
-//
-//                    panel.getRaster().clear();
-//                    lineRasterizer.rasterize(centerX, centerY, e.getX(), e.getY(), color);
-//                    panel.repaint();
-
-
-            }
-
-            @Override
-            public void mousePressed(MouseEvent e) {
-
-                System.out.println(point);
-
-                point = new Point(e.getX(), e.getY());
-                polygon.addPoint(point);
-
-                drawScene();
             }
         });
 
@@ -99,6 +84,23 @@ public class Controller2D {
     }
     private void drawScene(){
 
+        // nejdřív vyčisti raster
+        panel.getRaster().clear();
+
+        // pokud má polygon alespoň 2 body, vykresli jeho hrany
+        if (polygon.getPoints().size() >= 2) {
+            for (int i = 0; i < polygon.getPoints().size() - 1; i++) {
+                var p1 = polygon.getPoint(i);
+                var p2 = polygon.getPoint(i + 1);
+                lineRasterizer.rasterize(p1.getX(), p1.getY(), p2.getX(), p2.getY());
+            }
+        }
+
+        if (polygon.getPoints().size() > 2) {
+            var p1 = polygon.getPoint(0);
+            var p2 = polygon.getPoint(polygon.getPoints().size() - 1);
+            lineRasterizer.rasterize(p1.getX(), p1.getY(), p2.getX(), p2.getY());
+        }
 
         panel.repaint();
     }

@@ -5,23 +5,17 @@ import raster.RasterBufferedImage;
 
 public abstract class LineRasterizer {
     protected RasterBufferedImage raster;
-    protected Line line;
-    // TODO: vyřešit barvu.
-
 
     public LineRasterizer(RasterBufferedImage raster) {
         this.raster = raster;
-
     }
 
-
-    public void rasterize(Line line) {
-         rasterize(line.getX1(), line.getY1(), line.getX2(), line.getY2());
-    }
-
+    // TODO: vyřešit barvu.
     public void rasterize(int x1, int y1, int x2, int y2) {
 
-
     }
 
+    public void rasterize(Line line) {
+        rasterize(line.getX1(), line.getY1(), line.getX2(), line.getY2());
+    }
 }
