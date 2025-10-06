@@ -1,5 +1,7 @@
 package rasterize;
 
+import raster.RasterBufferedImage;
+
 public class LineRasterizerTrivial extends LineRasterizer {
 
     public LineRasterizerTrivial(RasterBufferedImage raster) {
@@ -7,7 +9,7 @@ public class LineRasterizerTrivial extends LineRasterizer {
     }
 
     @Override
-    public void rasterize(int x1, int y1, int x2, int y2, int color) {
+    public void rasterize(int x1, int y1, int x2, int y2) {
 
         int dx = x2 - x1;
 
@@ -18,7 +20,7 @@ public class LineRasterizerTrivial extends LineRasterizer {
                 y2 = temp;
             }
             for (int y = y1; y <= y2; y++) {
-                raster.setPixel(x1, y, color);
+                raster.setPixel(x1, y, 0xffffff);
             }
             return;
         }
@@ -33,7 +35,7 @@ public class LineRasterizerTrivial extends LineRasterizer {
             }
             for (int y = y1; y <= y2; y++) {
                 int x = Math.round((y - q) / k);
-                raster.setPixel(x, y, color);
+                raster.setPixel(x, y, 0xffffff);
             }
 
         } else {
@@ -45,10 +47,8 @@ public class LineRasterizerTrivial extends LineRasterizer {
             }
             for (int x = x1; x <= x2; x++) {
                 int y = Math.round(k * x + q);
-                raster.setPixel(x, y, color);
+                raster.setPixel(x, y, 0xffffff);
             }
-
-            // TODO: dokončit
 
         }
     }

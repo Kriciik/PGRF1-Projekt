@@ -1,6 +1,9 @@
 package controller;
 
 
+import model.Line;
+import model.Point;
+import model.Polygon;
 import rasterize.LineRasterizer;
 import rasterize.LineRasterizerGraphics;
 import rasterize.LineRasterizerTrivial;
@@ -10,17 +13,22 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 
 public class Controller2D {
     private final Panel panel;
-    private int color = 16776985;
-
+    private int color = 0xffffff;
     private LineRasterizer lineRasterizer;
+
+    private ArrayList<Line> lines = new ArrayList<>();
+    private Point point;
+    private Polygon polygon = new Polygon();
+    private int startX,startY;
+    boolean isLineStartSet = false;
 
     public Controller2D(Panel panel) {
         this.panel = panel;
 
-        //lineRasterizer = new LineRasterizerGraphics(panel.getRaster());
         lineRasterizer = new LineRasterizerTrivial(panel.getRaster());
 
         initListeners();
@@ -45,18 +53,30 @@ public class Controller2D {
         panel.addMouseMotionListener(new MouseAdapter() {
             @Override
             public void mouseDragged(MouseEvent e) {
-                // vykresli úsečku z do
+                // vykresli úsečku od - do
                 if(e.getX() < 0 || e.getX() > panel.getRaster().getWidth() - 1|| e.getY() < 0 || e.getY() > panel.getRaster().getHeight() - 1) {
-                    return;
+                   return;
                 }
                     int centerX = panel.getRaster().getWidth() / 2;
                     int centerY = panel.getRaster().getHeight() / 2;
 
-                    panel.getRaster().clear();
-                    lineRasterizer.rasterize(centerX, centerY, e.getX(), e.getY(), color);
-                    panel.repaint();
+//
+//                    panel.getRaster().clear();
+//                    lineRasterizer.rasterize(centerX, centerY, e.getX(), e.getY(), color);
+//                    panel.repaint();
 
 
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+
+                System.out.println(point);
+
+                point = new Point(e.getX(), e.getY());
+                polygon.addPoint(point);
+
+                drawScene();
             }
         });
 
@@ -75,5 +95,11 @@ public class Controller2D {
                 }
             }
         });
+
+    }
+    private void drawScene(){
+
+
+        panel.repaint();
     }
 }

@@ -1,4 +1,4 @@
-package rasterize;
+package raster;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -14,7 +14,12 @@ public class RasterBufferedImage implements Raster {
     @Override
     public void setPixel(int x, int y, int color) {
         // TODO: ošetřit zápis mimo raster
-        image.setRGB(x, y, color);
+        if(x < 0 || x > getWidth() - 1|| y < 0 || y > getHeight() - 1) {
+            return;
+        }else{
+            image.setRGB(x, y, 0xffffff);
+        }
+
     }
 
     @Override
