@@ -9,6 +9,7 @@ import rasterize.LineRasterizerGraphics;
 import rasterize.LineRasterizerTrivial;
 import view.Panel;
 
+import javax.swing.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -23,8 +24,9 @@ public class Controller2D {
     private ArrayList<Line> lines = new ArrayList<>();
     private Point point;
     private Polygon polygon = new Polygon();
-    private int startX,startY;
-    boolean isLineStartSet = false;
+
+    private int lineStartX, lineStartY;
+    private boolean isLineDrawing = false;
 
     public Controller2D(Panel panel) {
         this.panel = panel;
@@ -44,28 +46,64 @@ public class Controller2D {
                         e.getY() < 0 || e.getY() >= panel.getRaster().getHeight()) {
                     return;
                 }
-                // vykreslení
-                point = new Point(e.getX(), e.getY());
-                polygon.addPoint(point);
 
-                drawScene();
+                // vykreslení
+                if (SwingUtilities.isLeftMouseButton(e)) {
+                    // přidáme bod do polygonu
+                    Point point = new Point( e.getX() ,  e.getY() );
+                    polygon.addPoint(point);
+                    drawScene();
+                } else if (SwingUtilities.isRightMouseButton(e)) {
+                    // začátek úsečky
+                    lineStartX =  e.getX() ;
+                    lineStartY =  e.getY() ;
+                    isLineDrawing = true;
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (SwingUtilities.isRightMouseButton(e) && isLineDrawing) {
+                    int x = e.getX();
+                    int y = e.getY();
+
+                    // omezení
+                    x = Math.max(0, Math.min(x, panel.getRaster().getWidth() - 1));
+                    y = Math.max(0, Math.min(y, panel.getRaster().getHeight() - 1));
+
+                    // vykreslíme úsečku
+                    lineRasterizer.rasterize(lineStartX, lineStartY, x, y);
+
+                    isLineDrawing = false;
+                    panel.repaint();
+                }
             }
         });
 
         panel.addMouseMotionListener(new MouseAdapter() {
             @Override
             public void mouseDragged(MouseEvent e) {
-                // vykresli úsečku od - do
-                if(e.getX() < 0 || e.getX() > panel.getRaster().getWidth() - 1|| e.getY() < 0 || e.getY() > panel.getRaster().getHeight() - 1) {
-                   return;
-                }
-                    int centerX = panel.getRaster().getWidth() / 2;
-                    int centerY = panel.getRaster().getHeight() / 2;
 
+                //preview
+                if (isLineDrawing) {
+                    int x = e.getX();
+                    int y = e.getY();
+
+                    // Omezení kliknutí mimo raster
+                    x = Math.max(0, Math.min(x, panel.getRaster().getWidth() - 1));
+                    y = Math.max(0, Math.min(y, panel.getRaster().getHeight() - 1));
+
+                    drawScene();
+
+                    lineRasterizer.rasterize(lineStartX, lineStartY, x, y);
+
+                    panel.repaint();
+                }
             }
         });
 
         panel.addKeyListener(new KeyAdapter() {
+            // změna barev #TODO nefunguje (zatím)
             @Override
             public void keyPressed(KeyEvent e) {
                 if(e.getKeyCode() == KeyEvent.VK_O) {
@@ -84,10 +122,9 @@ public class Controller2D {
     }
     private void drawScene(){
 
-        // nejdřív vyčisti raster
         panel.getRaster().clear();
 
-        // pokud má polygon alespoň 2 body, vykresli jeho hrany
+        // Pokud aspoň 2 body, vykreslí se
         if (polygon.getPoints().size() >= 2) {
             for (int i = 0; i < polygon.getPoints().size() - 1; i++) {
                 var p1 = polygon.getPoint(i);
@@ -95,7 +132,7 @@ public class Controller2D {
                 lineRasterizer.rasterize(p1.getX(), p1.getY(), p2.getX(), p2.getY());
             }
         }
-
+        // Spojení Prvního a posledního bodu
         if (polygon.getPoints().size() > 2) {
             var p1 = polygon.getPoint(0);
             var p2 = polygon.getPoint(polygon.getPoints().size() - 1);
