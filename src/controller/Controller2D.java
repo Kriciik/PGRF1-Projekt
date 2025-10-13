@@ -5,6 +5,7 @@ import model.Line;
 import model.Point;
 import model.Polygon;
 import rasterize.LineRasterizer;
+import rasterize.LineRasterizerColorTransition;
 import rasterize.LineRasterizerGraphics;
 import rasterize.LineRasterizerTrivial;
 import view.Panel;
@@ -17,6 +18,8 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 
 public class Controller2D {
+    // #TODO LINEÁRNÍ INTERPOLACE: NAJDI SI SLIDE Z PREZENTACE A NAUČ SE TO BRO
+
     private final Panel panel;
     private int color = 0xffffff;
     private LineRasterizer lineRasterizer;
@@ -32,7 +35,7 @@ public class Controller2D {
         this.panel = panel;
 
         lineRasterizer = new LineRasterizerTrivial(panel.getRaster());
-
+        //lineRasterizer = new LineRasterizerColorTransition(panel.getRaster());
         initListeners();
 
     }
