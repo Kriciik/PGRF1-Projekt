@@ -6,11 +6,11 @@ import model.Point;
 import model.Polygon;
 import rasterize.LineRasterizer;
 import rasterize.LineRasterizerColorTransition;
-import rasterize.LineRasterizerGraphics;
 import rasterize.LineRasterizerTrivial;
 import view.Panel;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -18,10 +18,13 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 
 public class Controller2D {
-    // #TODO LINEÁRNÍ INTERPOLACE: NAJDI SI SLIDE Z PREZENTACE A NAUČ SE TO BRO
 
     private final Panel panel;
-    private int color = 0xffffff;
+
+    // Nastavení barev pro vykreslování
+    final private Color color1 = Color.BLUE;
+    final private Color color2 = Color.GRAY;
+
     private LineRasterizer lineRasterizer;
 
     private ArrayList<Line> lines = new ArrayList<>();
@@ -34,8 +37,11 @@ public class Controller2D {
     public Controller2D(Panel panel) {
         this.panel = panel;
 
+        // DDA Algoritmus
         lineRasterizer = new LineRasterizerTrivial(panel.getRaster());
-        //lineRasterizer = new LineRasterizerColorTransition(panel.getRaster());
+        lineRasterizer.setColor(Color.BLUE);
+        // DDA Alg. + color transition
+       // lineRasterizer = new LineRasterizerColorTransition(panel.getRaster());
         initListeners();
 
     }
@@ -52,7 +58,7 @@ public class Controller2D {
 
                 // vykreslení
                 if (SwingUtilities.isLeftMouseButton(e)) {
-                    // přidáme bod do polygonu
+                    // přidám bod do polygonu
                     Point point = new Point( e.getX() ,  e.getY() );
                     polygon.addPoint(point);
                     drawScene();
@@ -74,8 +80,7 @@ public class Controller2D {
                     x = Math.max(0, Math.min(x, panel.getRaster().getWidth() - 1));
                     y = Math.max(0, Math.min(y, panel.getRaster().getHeight() - 1));
 
-                    // vykreslíme úsečku
-                    lineRasterizer.rasterize(lineStartX, lineStartY, x, y);
+
 
                     isLineDrawing = false;
                     panel.repaint();
@@ -87,17 +92,36 @@ public class Controller2D {
             @Override
             public void mouseDragged(MouseEvent e) {
 
-                //preview
                 if (isLineDrawing) {
                     int x = e.getX();
                     int y = e.getY();
 
-                    // Omezení kliknutí mimo raster
+                    // Omezíme kliknutí mimo raster
                     x = Math.max(0, Math.min(x, panel.getRaster().getWidth() - 1));
                     y = Math.max(0, Math.min(y, panel.getRaster().getHeight() - 1));
 
-                    drawScene();
+                    // SNAP TO AXIS — pokud je SHIFT stisknutý
+                    if (e.isShiftDown()) {
+                        int dx = x - lineStartX;
+                        int dy = y - lineStartY;
 
+                        if (Math.abs(dx) > Math.abs(dy) * 2) {
+                            // Vodorovná
+                            y = lineStartY;
+                        } else if (Math.abs(dy) > Math.abs(dx) * 2) {
+                            // Svislá
+                            x = lineStartX;
+                        } else {
+                            // Úhlopříčná
+                            int signX = (dx >= 0) ? 1 : -1;
+                            int signY = (dy >= 0) ? 1 : -1;
+                            int len = Math.min(Math.abs(dx), Math.abs(dy));
+                            x = lineStartX + len * signX;
+                            y = lineStartY + len * signY;
+                        }
+                    }
+
+                    drawScene();
                     lineRasterizer.rasterize(lineStartX, lineStartY, x, y);
 
                     panel.repaint();
@@ -109,16 +133,24 @@ public class Controller2D {
             // změna barev #TODO nefunguje (zatím)
             @Override
             public void keyPressed(KeyEvent e) {
-                if(e.getKeyCode() == KeyEvent.VK_O) {
-                    color = 0xff0000;
-                }
 
-                if(e.getKeyCode() == KeyEvent.VK_P) {
-                    color = 0xffffff;
+                if(e.getKeyCode() == KeyEvent.VK_CONTROL) {
+
+                    lineRasterizer = new LineRasterizerTrivial(panel.getRaster());
+                    drawScene();
                 }
                 if(e.getKeyCode() == KeyEvent.VK_SPACE) {
-                    color = 16776985;
+
+                    lineRasterizer = new LineRasterizerColorTransition(panel.getRaster());
+                    lineRasterizer.setColors(color1, color2);
+                    drawScene();
                 }
+
+                if(e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    clearScene();
+                    drawScene();
+                }
+
             }
         });
 
@@ -143,5 +175,30 @@ public class Controller2D {
         }
 
         panel.repaint();
+    }
+
+    private void clearScene(){
+        polygon = new Polygon();
+        polygon.getPoints().clear();
+    }
+
+    private Point calculateSnap(int x, int y, boolean shiftDown) {
+        if (!shiftDown) return new Point(x, y);
+
+        int dx = x - lineStartX;
+        int dy = y - lineStartY;
+
+        if (Math.abs(dx) > Math.abs(dy) * 2) {
+            y = lineStartY; // horizontální
+        } else if (Math.abs(dy) > Math.abs(dx) * 2) {
+            x = lineStartX; // vertikální
+        } else {
+            int signX = dx >= 0 ? 1 : -1;
+            int signY = dy >= 0 ? 1 : -1;
+            int len = Math.min(Math.abs(dx), Math.abs(dy));
+            x = lineStartX + len * signX;
+            y = lineStartY + len * signY;
+        }
+        return new Point(x, y);
     }
 }

@@ -12,65 +12,51 @@ public class LineRasterizerColorTransition  extends LineRasterizer{
     @Override
     public void rasterize(int x1, int y1, int x2, int y2) {
         int dx = x2 - x1;
+        int dy = y2 - y1;
 
-        Color c1 = Color.RED;
-        Color c2 = Color.BLUE;
+        float[] col1 = c1.getColorComponents(null);
+        float[] col2 = c2.getColorComponents(null);
 
-        float[] colorCompC1 = c1.getColorComponents(null);
-
-        if (dx == 0) {
+        if (Math.abs(dy) > Math.abs(dx)) {
+            // Strmější čára - iteruju podle Y
             if (y1 > y2) {
-                int temp = y1;
-                y1 = y2;
-                y2 = temp;
+
+                int tmp = y1; y1 = y2; y2 = tmp;
+                int tmpx = x1; x1 = x2; x2 = tmpx;
+
             }
+
+            float k = (x2 - x1) / (float)(y2 - y1);
+
             for (int y = y1; y <= y2; y++) {
+                int x = Math.round(x1 + (y - y1) * k);
+                float t = (y - y1) / (float)(y2 - y1);
 
-                raster.setPixel(x1, y, 0xffffff);
-            }
-            return;
-        }
-        float k = (y2 - y1) / (float) (x2 - x1);
-        float q = y1 - k * x1;
-
-
-
-        if (Math.abs(k) > 1) {
-            if (y1 > y2) {
-                int tmpy = y1;
-                y1 = y2;
-                y2 = tmpy;
-            }
-            for (int y = y1; y <= y2; y++) {
-                int x = Math.round((y - q) / k);
-
-                raster.setPixel(x, y, 0xffffff);
-            }
-
-        } else {
-
-            if (x1 > x2) {
-                int tmpx = x1;
-                x1 = x2;
-                x2 = tmpx;
-            }
-            for (int x = x1; x <= x2; x++) {
-                int y = Math.round(k * x + q);
-
-                // t = odečti minimum, vyděl rozsahem
-                int t = x - x1 / dx;
-                for(int i = 0; i < 3; i++) {
-                    // newColors[i] = (i - t) * c1 + t * c2
-                    colorCompC1[i] = (i - t) * colorCompC1[i] + t * c2.getColorComponents(null)[i] ;
-                    // TODO: dodělat
-
-                }
-                Color color =  new Color(colorCompC1[i], colorCompC1[i], colorCompC1[i]);
+                float r = (1 - t) * col1[0] + t * col2[0];
+                float g = (1 - t) * col1[1] + t * col2[1];
+                float b = (1 - t) * col1[2] + t * col2[2];
+                Color color = new Color(r, g, b);
 
                 raster.setPixel(x, y, color);
             }
+        } else {
+            // Plochá čára - iteruju podle X
+            if (x1 > x2) {
+                int tmp = x1; x1 = x2; x2 = tmp;
+                int tmpy = y1; y1 = y2; y2 = tmpy;
+            }
+            float k = (y2 - y1) / (float)(x2 - x1);
+            for (int x = x1; x <= x2; x++) {
+                int y = Math.round(y1 + (x - x1) * k);
+                float t = (x - x1) / (float)(x2 - x1);
 
+                float r = (1 - t) * col1[0] + t * col2[0];
+                float g = (1 - t) * col1[1] + t * col2[1];
+                float b = (1 - t) * col1[2] + t * col2[2];
+                Color color = new Color(r, g, b);
+
+                raster.setPixel(x, y, color);
+            }
         }
     }
-
 }
