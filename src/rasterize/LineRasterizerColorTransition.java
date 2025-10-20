@@ -22,7 +22,7 @@ public class LineRasterizerColorTransition  extends LineRasterizer{
             if (y1 > y2) {
 
                 int tmp = y1; y1 = y2; y2 = tmp;
-                int tmpx = x1; x1 = x2; x2 = tmpx;
+               // int tmpx = x1; x1 = x2; x2 = tmpx;
 
             }
 
@@ -43,7 +43,7 @@ public class LineRasterizerColorTransition  extends LineRasterizer{
             // Plochá čára - iteruju podle X
             if (x1 > x2) {
                 int tmp = x1; x1 = x2; x2 = tmp;
-                int tmpy = y1; y1 = y2; y2 = tmpy;
+               // int tmpy = y1; y1 = y2; y2 = tmpy;
             }
             float k = (y2 - y1) / (float)(x2 - x1);
             for (int x = x1; x <= x2; x++) {

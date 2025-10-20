@@ -1,6 +1,8 @@
 package controller;
 
 
+import fill.Filler;
+import fill.SeedfillFiller;
 import model.Line;
 import model.Point;
 import model.Polygon;
@@ -27,8 +29,9 @@ public class Controller2D {
 
     private LineRasterizer lineRasterizer;
 
-    private ArrayList<Line> lines = new ArrayList<>();
-    private Point point;
+    private Filler  filler;
+    private Point seedFillStart;
+
     private Polygon polygon = new Polygon();
 
     private int lineStartX, lineStartY;
@@ -40,8 +43,8 @@ public class Controller2D {
         // DDA Algoritmus
         lineRasterizer = new LineRasterizerTrivial(panel.getRaster());
         lineRasterizer.setColor(Color.BLUE);
-        // DDA Alg. + color transition
-       // lineRasterizer = new LineRasterizerColorTransition(panel.getRaster());
+
+
         initListeners();
 
     }
@@ -50,6 +53,7 @@ public class Controller2D {
         panel.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
+
                 // Omezení kliknutí mimo raster
                 if (e.getX() < 0 || e.getX() >= panel.getRaster().getWidth() ||
                         e.getY() < 0 || e.getY() >= panel.getRaster().getHeight()) {
@@ -57,16 +61,21 @@ public class Controller2D {
                 }
 
                 // vykreslení
-                if (SwingUtilities.isLeftMouseButton(e)) {
+                if (e.getButton() == MouseEvent.BUTTON1) {
                     // přidám bod do polygonu
-                    Point point = new Point( e.getX() ,  e.getY() );
+                    Point point = new Point( e.getX(), e.getY() );
                     polygon.addPoint(point);
                     drawScene();
-                } else if (SwingUtilities.isRightMouseButton(e)) {
+                } else if (e.getButton() == MouseEvent.BUTTON3) {
                     // začátek úsečky
                     lineStartX =  e.getX() ;
                     lineStartY =  e.getY() ;
                     isLineDrawing = true;
+                }
+
+                if(SwingUtilities.isMiddleMouseButton(e)) {
+                    seedFillStart = new Point( e.getX() , e.getY() );
+                    drawScene();
                 }
             }
 
@@ -80,11 +89,10 @@ public class Controller2D {
                     x = Math.max(0, Math.min(x, panel.getRaster().getWidth() - 1));
                     y = Math.max(0, Math.min(y, panel.getRaster().getHeight() - 1));
 
-
-
                     isLineDrawing = false;
                     panel.repaint();
                 }
+
             }
         });
 
@@ -146,9 +154,8 @@ public class Controller2D {
                     drawScene();
                 }
 
-                if(e.getKeyCode() == KeyEvent.VK_ENTER) {
+                if(e.getKeyCode() == KeyEvent.VK_C) {
                     clearScene();
-                    drawScene();
                 }
 
             }
@@ -174,12 +181,16 @@ public class Controller2D {
             lineRasterizer.rasterize(p1.getX(), p1.getY(), p2.getX(), p2.getY());
         }
 
+        if(seedFillStart != null) {
+            filler = new SeedfillFiller(panel.getRaster(), seedFillStart.getX(), seedFillStart.getY(), new Color(0xFF3366));
+        }
         panel.repaint();
     }
 
     private void clearScene(){
         polygon = new Polygon();
         polygon.getPoints().clear();
+        drawScene();
     }
 
     private Point calculateSnap(int x, int y, boolean shiftDown) {
