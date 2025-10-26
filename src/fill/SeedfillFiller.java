@@ -48,8 +48,8 @@ public class SeedfillFiller implements Filler {
         raster.setPixel(x, y, fillColor);
 
         seedFill(x+1, y);
+        seedFill(x, y+1);
         seedFill(x-1, y);
-        seedFill(x, y-1);
         seedFill(x, y-1);
 
 

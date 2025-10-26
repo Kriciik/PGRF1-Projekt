@@ -68,14 +68,20 @@ public class Controller2D {
                     drawScene();
                 } else if (e.getButton() == MouseEvent.BUTTON3) {
                     // začátek úsečky
-                    lineStartX =  e.getX() ;
-                    lineStartY =  e.getY() ;
+                    lineStartX =  e.getX();
+                    lineStartY =  e.getY();
                     isLineDrawing = true;
                 }
 
                 if(SwingUtilities.isMiddleMouseButton(e)) {
-                    seedFillStart = new Point( e.getX() , e.getY() );
+
+                    seedFillStart = new Point(e.getX(), e.getY());
+                    filler = new SeedfillFiller(panel.getRaster(),
+                            seedFillStart.getX(), seedFillStart.getY(),
+                            new Color(0xFF3366));
+
                     drawScene();
+                    filler.fill();
                 }
             }
 
@@ -179,10 +185,6 @@ public class Controller2D {
             var p1 = polygon.getPoint(0);
             var p2 = polygon.getPoint(polygon.getPoints().size() - 1);
             lineRasterizer.rasterize(p1.getX(), p1.getY(), p2.getX(), p2.getY());
-        }
-
-        if(seedFillStart != null) {
-            filler = new SeedfillFiller(panel.getRaster(), seedFillStart.getX(), seedFillStart.getY(), new Color(0xFF3366));
         }
         panel.repaint();
     }
