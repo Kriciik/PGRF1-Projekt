@@ -2,6 +2,7 @@ package controller;
 
 
 import fill.Filler;
+import fill.ScanLineFiller;
 import fill.SeedfillFiller;
 import model.Line;
 import model.Point;
@@ -9,6 +10,7 @@ import model.Polygon;
 import rasterize.LineRasterizer;
 import rasterize.LineRasterizerColorTransition;
 import rasterize.LineRasterizerTrivial;
+import rasterize.PolygonRasterizer;
 import view.Panel;
 
 import javax.swing.*;
@@ -28,7 +30,7 @@ public class Controller2D {
     final private Color color2 = Color.GRAY;
 
     private LineRasterizer lineRasterizer;
-
+    private PolygonRasterizer polygonRasterizer;
     private Filler  filler;
     private Point seedFillStart;
 
@@ -42,8 +44,9 @@ public class Controller2D {
 
         // DDA Algoritmus
         lineRasterizer = new LineRasterizerTrivial(panel.getRaster());
-        lineRasterizer.setColor(Color.BLUE);
+        lineRasterizer.setColor(Color.CYAN);
 
+        polygonRasterizer = new PolygonRasterizer(lineRasterizer);
 
         initListeners();
 
@@ -74,12 +77,12 @@ public class Controller2D {
                 }
 
                 if(SwingUtilities.isMiddleMouseButton(e)) {
-
                     seedFillStart = new Point(e.getX(), e.getY());
-                    filler = new SeedfillFiller(panel.getRaster(),
+                  /*  filler = new SeedfillFiller(panel.getRaster(),
                             seedFillStart.getX(), seedFillStart.getY(),
-                            new Color(0xFF3366));
+                            new Color(0xFF3366));*/
 
+                    filler = new ScanLineFiller(lineRasterizer, polygonRasterizer, polygon);
                     drawScene();
                     filler.fill();
                 }
@@ -144,7 +147,6 @@ public class Controller2D {
         });
 
         panel.addKeyListener(new KeyAdapter() {
-            // změna barev #TODO nefunguje (zatím)
             @Override
             public void keyPressed(KeyEvent e) {
 
@@ -163,7 +165,6 @@ public class Controller2D {
                 if(e.getKeyCode() == KeyEvent.VK_C) {
                     clearScene();
                 }
-
             }
         });
 
@@ -171,21 +172,7 @@ public class Controller2D {
     private void drawScene(){
 
         panel.getRaster().clear();
-
-        // Pokud aspoň 2 body, vykreslí se
-        if (polygon.getPoints().size() >= 2) {
-            for (int i = 0; i < polygon.getPoints().size() - 1; i++) {
-                var p1 = polygon.getPoint(i);
-                var p2 = polygon.getPoint(i + 1);
-                lineRasterizer.rasterize(p1.getX(), p1.getY(), p2.getX(), p2.getY());
-            }
-        }
-        // Spojení Prvního a posledního bodu
-        if (polygon.getPoints().size() > 2) {
-            var p1 = polygon.getPoint(0);
-            var p2 = polygon.getPoint(polygon.getPoints().size() - 1);
-            lineRasterizer.rasterize(p1.getX(), p1.getY(), p2.getX(), p2.getY());
-        }
+        polygonRasterizer.rasterize(polygon);
         panel.repaint();
     }
 
@@ -195,23 +182,5 @@ public class Controller2D {
         drawScene();
     }
 
-    private Point calculateSnap(int x, int y, boolean shiftDown) {
-        if (!shiftDown) return new Point(x, y);
 
-        int dx = x - lineStartX;
-        int dy = y - lineStartY;
-
-        if (Math.abs(dx) > Math.abs(dy) * 2) {
-            y = lineStartY; // horizontální
-        } else if (Math.abs(dy) > Math.abs(dx) * 2) {
-            x = lineStartX; // vertikální
-        } else {
-            int signX = dx >= 0 ? 1 : -1;
-            int signY = dy >= 0 ? 1 : -1;
-            int len = Math.min(Math.abs(dx), Math.abs(dy));
-            x = lineStartX + len * signX;
-            y = lineStartY + len * signY;
-        }
-        return new Point(x, y);
-    }
 }

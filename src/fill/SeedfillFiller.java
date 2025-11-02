@@ -52,6 +52,5 @@ public class SeedfillFiller implements Filler {
         seedFill(x-1, y);
         seedFill(x, y-1);
 
-
     }
 }
