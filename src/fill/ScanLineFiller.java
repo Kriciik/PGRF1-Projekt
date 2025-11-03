@@ -22,6 +22,7 @@ public class ScanLineFiller implements Filler {
 
     @Override
     public void fill() {
+        // ZAPAMATOVAT: SKALÁRNÍ A VEKTOROVÝ SOUČIN TODO
         // TODO: nechci vyplnit polygon, který má méně, jak 3 vrcholy DONE
         if (polygon.getPoints().size() < 3) {
             return;
@@ -40,6 +41,7 @@ public class ScanLineFiller implements Filler {
             Point b = polygon.getPoint(indexB);
 
             Edge edge = new Edge(a, b);
+
             if (!edge.isHorizontal()) {
                 edge.orientate();
                 edges.add(edge);

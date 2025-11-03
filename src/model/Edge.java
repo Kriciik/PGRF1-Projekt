@@ -18,13 +18,13 @@ public class Edge {
     }
 
     public boolean isHorizontal() {
-        // TODO: podmínka, jestli je horizontální
+        // TODO: podmínka, jestli je horizontální DONE
         return y1 == y2;
     }
 
     public void orientate() {
 
-            // TODO: Prohodím vrcholy (y a x)
+            // TODO: Prohodím vrcholy (y a x) DONE
         if (y1 > y2) {
             // Prohoď vrcholy, aby y1 < y2
             int tmpX = x1;
@@ -41,7 +41,8 @@ public class Edge {
     }
 
     public int getIntersection(int y) {
-        // TODO: spočítat průsečík
+        // TODO: spočítat průsečík DONE
+
         if (y2 == y1) return x1; // pokud nula
         double t = (double) (y - y1) / (y2 - y1);
         double x = x1 + t * (x2 - x1);

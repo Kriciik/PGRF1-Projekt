@@ -1,6 +1,7 @@
 package controller;
 
 
+import clip.Clipper;
 import fill.Filler;
 import fill.ScanLineFiller;
 import fill.SeedfillFiller;
@@ -13,6 +14,7 @@ import rasterize.LineRasterizerTrivial;
 import rasterize.PolygonRasterizer;
 import view.Panel;
 
+import javax.sound.sampled.Clip;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
@@ -31,13 +33,17 @@ public class Controller2D {
 
     private LineRasterizer lineRasterizer;
     private PolygonRasterizer polygonRasterizer;
+
     private Filler  filler;
     private Point seedFillStart;
 
     private Polygon polygon = new Polygon();
+    private Polygon polygonClipper = new Polygon();
 
     private int lineStartX, lineStartY;
     private boolean isLineDrawing = false;
+
+    private Clipper clipper;
 
     public Controller2D(Panel panel) {
         this.panel = panel;
@@ -68,21 +74,26 @@ public class Controller2D {
                     // přidám bod do polygonu
                     Point point = new Point( e.getX(), e.getY() );
                     polygon.addPoint(point);
+
                     drawScene();
+
                 } else if (e.getButton() == MouseEvent.BUTTON3) {
                     // začátek úsečky
-                    lineStartX =  e.getX();
-                    lineStartY =  e.getY();
-                    isLineDrawing = true;
+                    //lineStartX =  e.getX();
+                    //lineStartY =  e.getY();
+                    //isLineDrawing = true;
+
+                    polygonClipper.addPoint(new Point(e.getX(), e.getY()));
+                    drawScene();
                 }
 
                 if(SwingUtilities.isMiddleMouseButton(e)) {
-                    seedFillStart = new Point(e.getX(), e.getY());
+                   // seedFillStart = new Point(e.getX(), e.getY());
                   /*  filler = new SeedfillFiller(panel.getRaster(),
                             seedFillStart.getX(), seedFillStart.getY(),
                             new Color(0xFF3366));*/
 
-                    filler = new ScanLineFiller(lineRasterizer, polygonRasterizer, polygon);
+                    //filler = new ScanLineFiller(lineRasterizer, polygonRasterizer, polygon);
                     drawScene();
                     filler.fill();
                 }
@@ -90,17 +101,17 @@ public class Controller2D {
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                if (SwingUtilities.isRightMouseButton(e) && isLineDrawing) {
-                    int x = e.getX();
-                    int y = e.getY();
-
-                    // omezení
-                    x = Math.max(0, Math.min(x, panel.getRaster().getWidth() - 1));
-                    y = Math.max(0, Math.min(y, panel.getRaster().getHeight() - 1));
-
-                    isLineDrawing = false;
-                    panel.repaint();
-                }
+//                if (SwingUtilities.isRightMouseButton(e) && isLineDrawing) {
+//                    int x = e.getX();
+//                    int y = e.getY();
+//
+//                    // omezení
+//                    x = Math.max(0, Math.min(x, panel.getRaster().getWidth() - 1));
+//                    y = Math.max(0, Math.min(y, panel.getRaster().getHeight() - 1));
+//
+//                    isLineDrawing = false;
+//                    panel.repaint();
+//                }
 
             }
         });
@@ -133,12 +144,14 @@ public class Controller2D {
                             int signX = (dx >= 0) ? 1 : -1;
                             int signY = (dy >= 0) ? 1 : -1;
                             int len = Math.min(Math.abs(dx), Math.abs(dy));
+
                             x = lineStartX + len * signX;
                             y = lineStartY + len * signY;
                         }
                     }
 
                     drawScene();
+
                     lineRasterizer.rasterize(lineStartX, lineStartY, x, y);
 
                     panel.repaint();
@@ -153,12 +166,14 @@ public class Controller2D {
                 if(e.getKeyCode() == KeyEvent.VK_CONTROL) {
 
                     lineRasterizer = new LineRasterizerTrivial(panel.getRaster());
+
                     drawScene();
                 }
                 if(e.getKeyCode() == KeyEvent.VK_SPACE) {
 
                     lineRasterizer = new LineRasterizerColorTransition(panel.getRaster());
                     lineRasterizer.setColors(color1, color2);
+
                     drawScene();
                 }
 
@@ -172,7 +187,18 @@ public class Controller2D {
     private void drawScene(){
 
         panel.getRaster().clear();
+
         polygonRasterizer.rasterize(polygon);
+        polygonRasterizer.rasterize(polygonClipper);
+
+        Clipper clipper = new Clipper();
+        ArrayList<Point> clippedPoints = clipper.clip(polygonClipper.getPoints(), polygon.getPoints());
+
+        Polygon newPolygon =  new Polygon(clippedPoints);
+
+        Filler scanLine = new ScanLineFiller(lineRasterizer, polygonRasterizer, newPolygon);
+        scanLine.fill();
+
         panel.repaint();
     }
 
