@@ -5,16 +5,13 @@ import clip.Clipper;
 import fill.Filler;
 import fill.ScanLineFiller;
 import fill.SeedfillFiller;
-import model.Line;
 import model.Point;
 import model.Polygon;
+import model.Rectangle;
 import rasterize.LineRasterizer;
-import rasterize.LineRasterizerColorTransition;
 import rasterize.LineRasterizerTrivial;
 import rasterize.PolygonRasterizer;
 import view.Panel;
-
-import javax.sound.sampled.Clip;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
@@ -29,19 +26,20 @@ public class Controller2D {
 
     // Nastavení barev pro vykreslování
     final private Color color1 = Color.BLUE;
-    final private Color color2 = Color.GRAY;
+    final private Color color2 = Color.PINK;
 
-    private LineRasterizer lineRasterizer;
-    private PolygonRasterizer polygonRasterizer;
+    private final LineRasterizer lineRasterizer;
+    private final PolygonRasterizer polygonRasterizer;
 
-    private Filler  filler;
+    private Filler filler;
     private Point seedFillStart;
 
     private Polygon polygon = new Polygon();
     private Polygon polygonClipper = new Polygon();
 
-    private int lineStartX, lineStartY;
-    private boolean isLineDrawing = false;
+    private Point rectA;
+    private Point rectB;
+    private Polygon rectangle;
 
     private Clipper clipper;
 
@@ -50,7 +48,7 @@ public class Controller2D {
 
         // DDA Algoritmus
         lineRasterizer = new LineRasterizerTrivial(panel.getRaster());
-        lineRasterizer.setColor(Color.CYAN);
+        lineRasterizer.setColor(color1);
 
         polygonRasterizer = new PolygonRasterizer(lineRasterizer);
 
@@ -68,93 +66,55 @@ public class Controller2D {
                         e.getY() < 0 || e.getY() >= panel.getRaster().getHeight()) {
                     return;
                 }
+                Point p = new Point(e.getX(), e.getY());
+                if (e.isShiftDown() && e.getButton() == MouseEvent.BUTTON1) {
 
+                    if (rectA == null) {
+                        rectA = p;
+                        return;
+                    }
+
+                    if (rectB == null) {
+                        rectB = p;
+                        return;
+                    }
+
+                    // třetí bod -> vytvoříme obdélník
+                    rectangle = new Rectangle(rectA, rectB, p);
+                    // vyprázdníme stav
+                    rectA = null;
+                    rectB = null;
+
+                    drawScene();
+                    return;
+                }
                 // vykreslení
                 if (e.getButton() == MouseEvent.BUTTON1) {
-                    // přidám bod do polygonu
+
                     Point point = new Point( e.getX(), e.getY() );
                     polygon.addPoint(point);
 
                     drawScene();
 
                 } else if (e.getButton() == MouseEvent.BUTTON3) {
-                    // začátek úsečky
-                    //lineStartX =  e.getX();
-                    //lineStartY =  e.getY();
-                    //isLineDrawing = true;
+                    Point newPoint = new Point(e.getX(), e.getY());
 
-                    polygonClipper.addPoint(new Point(e.getX(), e.getY()));
-                    drawScene();
+                    if (isConvexWithNewPoint(polygonClipper, newPoint)) {
+                        polygonClipper.addPoint(newPoint);
+
+                        if (polygonClipper.getPoints().size() >= 3) drawScene();
+                        else panel.repaint();
+
+                    }
                 }
 
-                if(SwingUtilities.isMiddleMouseButton(e)) {
-                   // seedFillStart = new Point(e.getX(), e.getY());
-                  /*  filler = new SeedfillFiller(panel.getRaster(),
+               if(SwingUtilities.isMiddleMouseButton(e)) {
+                    seedFillStart = new Point(e.getX(), e.getY());
+                    filler = new SeedfillFiller(panel.getRaster(),
                             seedFillStart.getX(), seedFillStart.getY(),
-                            new Color(0xFF3366));*/
-
-                    //filler = new ScanLineFiller(lineRasterizer, polygonRasterizer, polygon);
+                            new Color(color2.getRGB()));
                     drawScene();
                     filler.fill();
-                }
-            }
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-//                if (SwingUtilities.isRightMouseButton(e) && isLineDrawing) {
-//                    int x = e.getX();
-//                    int y = e.getY();
-//
-//                    // omezení
-//                    x = Math.max(0, Math.min(x, panel.getRaster().getWidth() - 1));
-//                    y = Math.max(0, Math.min(y, panel.getRaster().getHeight() - 1));
-//
-//                    isLineDrawing = false;
-//                    panel.repaint();
-//                }
-
-            }
-        });
-
-        panel.addMouseMotionListener(new MouseAdapter() {
-            @Override
-            public void mouseDragged(MouseEvent e) {
-
-                if (isLineDrawing) {
-                    int x = e.getX();
-                    int y = e.getY();
-
-                    // Omezíme kliknutí mimo raster
-                    x = Math.max(0, Math.min(x, panel.getRaster().getWidth() - 1));
-                    y = Math.max(0, Math.min(y, panel.getRaster().getHeight() - 1));
-
-                    // SNAP TO AXIS — pokud je SHIFT stisknutý
-                    if (e.isShiftDown()) {
-                        int dx = x - lineStartX;
-                        int dy = y - lineStartY;
-
-                        if (Math.abs(dx) > Math.abs(dy) * 2) {
-                            // Vodorovná
-                            y = lineStartY;
-                        } else if (Math.abs(dy) > Math.abs(dx) * 2) {
-                            // Svislá
-                            x = lineStartX;
-                        } else {
-                            // Úhlopříčná
-                            int signX = (dx >= 0) ? 1 : -1;
-                            int signY = (dy >= 0) ? 1 : -1;
-                            int len = Math.min(Math.abs(dx), Math.abs(dy));
-
-                            x = lineStartX + len * signX;
-                            y = lineStartY + len * signY;
-                        }
-                    }
-
-                    drawScene();
-
-                    lineRasterizer.rasterize(lineStartX, lineStartY, x, y);
-
-                    panel.repaint();
                 }
             }
         });
@@ -162,21 +122,6 @@ public class Controller2D {
         panel.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
-
-                if(e.getKeyCode() == KeyEvent.VK_CONTROL) {
-
-                    lineRasterizer = new LineRasterizerTrivial(panel.getRaster());
-
-                    drawScene();
-                }
-                if(e.getKeyCode() == KeyEvent.VK_SPACE) {
-
-                    lineRasterizer = new LineRasterizerColorTransition(panel.getRaster());
-                    lineRasterizer.setColors(color1, color2);
-
-                    drawScene();
-                }
-
                 if(e.getKeyCode() == KeyEvent.VK_C) {
                     clearScene();
                 }
@@ -191,22 +136,67 @@ public class Controller2D {
         polygonRasterizer.rasterize(polygon);
         polygonRasterizer.rasterize(polygonClipper);
 
-        Clipper clipper = new Clipper();
-        ArrayList<Point> clippedPoints = clipper.clip(polygonClipper.getPoints(), polygon.getPoints());
+        if (rectangle != null) {
+            polygonRasterizer.rasterize(rectangle);
+        }
 
-        Polygon newPolygon =  new Polygon(clippedPoints);
+        if (polygonClipper.getPoints().size() < 3) {
+            Filler scanLine = new ScanLineFiller(lineRasterizer, polygonRasterizer, polygon);
 
-        Filler scanLine = new ScanLineFiller(lineRasterizer, polygonRasterizer, newPolygon);
-        scanLine.fill();
+            scanLine.fill();
+        } else if(polygon.getPoints().size() >= 3 && polygonClipper.getPoints().size() >= 3){
+            clipper = new Clipper();
+            ArrayList<Point> clippedPoints = clipper.clip(polygonClipper.getPoints(), polygon.getPoints());
+
+            if (clippedPoints.size() >= 3) {
+                Polygon newPolygon = new Polygon(clippedPoints);
+                Filler scanLine = new ScanLineFiller(lineRasterizer, polygonRasterizer, newPolygon);
+
+                scanLine.fill();
+            }
+        }
+
 
         panel.repaint();
     }
 
     private void clearScene(){
         polygon = new Polygon();
+        polygonClipper = new Polygon();
+        rectangle = new Polygon();
+
         polygon.getPoints().clear();
+        polygonClipper.getPoints().clear();
+        rectangle.getPoints().clear();
+
         drawScene();
     }
 
+    private boolean isConvexWithNewPoint(Polygon polygon, Point newPoint) {
+        ArrayList<Point> points = new ArrayList<>(polygon.getPoints());
+        points.add(newPoint);
+
+        if (points.size() < 3) return true; // 1–2 body → vždy konvexní
+
+        boolean gotPositive = false;
+        boolean gotNegative = false;
+        int n = points.size();
+
+        for (int i = 0; i < n; i++) {
+            Point A = points.get(i);
+            Point B = points.get((i + 1) % n);
+            Point C = points.get((i + 2) % n);
+
+            int cross = (B.getX() - A.getX()) * (C.getY() - B.getY())
+                    - (B.getY() - A.getY()) * (C.getX() - B.getX());
+
+            if (cross > 0) gotPositive = true;
+            else if (cross < 0) gotNegative = true;
+
+            if (gotPositive && gotNegative) return false; // nekonvexní
+        }
+
+        return true;
+    }
 
 }

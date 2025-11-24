@@ -22,8 +22,8 @@ public class ScanLineFiller implements Filler {
 
     @Override
     public void fill() {
-        // ZAPAMATOVAT: SKALÁRNÍ A VEKTOROVÝ SOUČIN TODO
-        // TODO: nechci vyplnit polygon, který má méně, jak 3 vrcholy DONE
+
+        // nechci vyplnit polygon, který má méně, jak 3 vrcholy
         if (polygon.getPoints().size() < 3) {
             return;
         }
@@ -48,11 +48,11 @@ public class ScanLineFiller implements Filler {
             }
         }
 
-        // TODO: Najít yMin a yMax DONE
+        // Najít yMin a yMax
         int yMin = edges.getFirst().getY1();
         int yMax = edges.getFirst().getY2();
 
-        // TODO: projít všechny pointy polygonu a najít min a max DONE
+        // projít všechny pointy polygonu a najít min a max
         for (Edge edge : edges) {
             if (edge.getY1() < yMin) yMin = edge.getY1();
             if (edge.getY2() > yMax) yMax = edge.getY2();
@@ -73,7 +73,7 @@ public class ScanLineFiller implements Filler {
             Collections.sort(intersections);
 
 
-            // TODO: Spojím (obarvím) průsečíky, 0 - 1, 2 - 3, 4 - 5, 6 - 7 DONE
+            //Spojím (obarvím) průsečíky, 0 - 1, 2 - 3, 4 - 5, 6 - 7
             for (int i = 0; i < intersections.size() - 1; i += 2) {
                 int xStart = intersections.get(i);
                 int xEnd = intersections.get(i + 1);
@@ -83,7 +83,7 @@ public class ScanLineFiller implements Filler {
             }
 
         }
-        // TODO: Vykreslím hranici polygonu DONE
+        // Vykreslím hranici polygonu
         polygonRasterizer.rasterize(polygon);
     }
 }
