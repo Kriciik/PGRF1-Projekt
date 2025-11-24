@@ -1,0 +1,13 @@
+
+ZOBRAZOVACÍ ŘETĚZEC
+
+Model = Solid
+KROKY:
+DONE - Model > reprezentace, vertex buffer, index buffer (model space)
+- Model transformation = model space > world space
+- nastavit kameru = view transformation = world space > view space
+- Transformace zobrazovacího objemu - projection = view space > soustava souřadnic ořezání
+- ořezání
+- dehomogenizace = x, y, z, w > x/w, y/w, z/w, w/w = soustava souřadnic ořezání > NDC
+DONE - transformace do okna obrazovky = NDC > souřadnice okna
+DONE - rasterizace

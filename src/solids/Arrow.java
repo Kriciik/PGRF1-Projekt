@@ -7,29 +7,20 @@ public class Arrow extends Solid {
         // TODO: naplním VB - v souřadnicích rasteru
         // TODO: naplním IB
 
-        //špička šipky
-        vertexBuffer.add(new Point3D(200, 100, 0));
-
         //konec tyčky
-        vertexBuffer.add(new Point3D(200, 300, 0));
+        vertexBuffer.add(new Point3D(0.6f,0 , 0)); // v3
+
+        //špička šipky
+        vertexBuffer.add(new Point3D(-0.5f, 0, 0)); // v0
 
         //levé rameno
-        vertexBuffer.add(new Point3D(150, 150, 0));
-
+        vertexBuffer.add(new Point3D(0.5, 0.1, 0)); // v4
         //pravé rameno
-        vertexBuffer.add(new Point3D(250, 150, 0));
+        vertexBuffer.add(new Point3D(0.5,-0.1, 0)); // v2
 
-        // tyčka
-        indexBuffer.add(1);
-        indexBuffer.add(0);
-
-        // levé rameno
-        indexBuffer.add(0);
-        indexBuffer.add(2);
-
-        // pravé rameno
-        indexBuffer.add(0);
-        indexBuffer.add(3);
+        addIndices(0,1,0,2,0,3);
     }
+
+
 
 }

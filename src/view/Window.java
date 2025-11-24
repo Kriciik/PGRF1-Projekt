@@ -11,7 +11,6 @@ public class Window extends JFrame {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setTitle("PGRF1 2024/2025");
         setVisible(true);
-
         panel = new Panel(width, heigth);
         add(panel);
         pack();
