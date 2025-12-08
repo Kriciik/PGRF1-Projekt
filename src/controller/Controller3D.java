@@ -22,7 +22,7 @@ public class Controller3D {
     private Solid arrow;
     private Solid cube;
     private Solid axisX, axisY, axisZ;
-
+    private Solid curve;
     // Camera
     private Camera camera;
     private Mat4 proj;
@@ -54,6 +54,7 @@ public class Controller3D {
         axisY = new AxisY();
         axisZ = new AxisZ();
 
+        curve = new Curve();
         initListeners();
     }
 
@@ -95,6 +96,7 @@ public class Controller3D {
                 if (e.getKeyCode() == KeyEvent.VK_S) {
                     camera = camera.backward(0.5);
                 }
+
                 drawScene();
 
             }
@@ -112,6 +114,7 @@ public class Controller3D {
         renderer.render(axisX);
         renderer.render(axisY);
         renderer.render(axisZ);
+        renderer.render(curve);
 
         panel.repaint();
     }

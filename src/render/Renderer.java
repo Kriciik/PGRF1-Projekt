@@ -60,8 +60,8 @@ public class Renderer {
                     .mul(proj); // View space > Clip Space
 
 
-            // TODO: ořezání
-
+            // TODO: ořezání - slide 88
+           // if(pointB.getX() >= -width ) continue;
 
             // TODO: dehomogenizace (Done)
             pointA = pointA.mul(1/ pointA.getW());
