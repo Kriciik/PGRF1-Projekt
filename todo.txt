@@ -11,3 +11,10 @@ DONE (cv. 11) - Model transformation = model space > world space
 - dehomogenizace = x, y, z, w > x/w, y/w, z/w, w/w = soustava souřadnic ořezání > NDC
 DONE (cv. 10) - transformace do okna obrazovky = NDC > souřadnice okna
 DONE (cv. 10)- rasterizace
+
+
+výběr aktivního tělesa
+rozhlížení myší
+pravoúhlá
+osy bez podelovací transformace
+možnost transformace kubik
