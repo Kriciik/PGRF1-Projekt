@@ -5,9 +5,19 @@ Model = Solid
 KROKY:
 DONE (cv. 10) - Model > reprezentace, vertex buffer, index buffer (model space)
 DONE (cv. 11) - Model transformation = model space > world space
-DONE (cv. 11)nastavit kameru = view transformation = world space > view space
+- nastavit kameru = view transformation = world space > view space
 - Transformace zobrazovacího objemu - projection = view space > soustava souřadnic ořezání
 - ořezání
-DONE (cv. 11) - dehomogenizace = x, y, z, w > x/w, y/w, z/w, w/w = soustava souřadnic ořezání > NDC
+- dehomogenizace = x, y, z, w > x/w, y/w, z/w, w/w = soustava souřadnic ořezání > NDC
 DONE (cv. 10) - transformace do okna obrazovky = NDC > souřadnice okna
-DONE (cv. 10) - rasterizace
+DONE (cv. 10)- rasterizace
+
+přidat do projektu:
+výběr aktivního tělesa
+rozhlížení myší
+pravoúhlá
+osy bez podelovací transformace
+možnost transformace kubik
+
+transformace curve
+curve.Bezier a další 2 dodělat
