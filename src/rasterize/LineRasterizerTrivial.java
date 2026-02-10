@@ -24,7 +24,7 @@ public class LineRasterizerTrivial extends LineRasterizer {
                 y2 = temp;
             }
             for (int y = y1; y <= y2; y++) {
-                raster.setPixel(x1, y, awtColor);
+                raster.setValue(x1, y, awtColor);
             }
             return;
         }
@@ -39,7 +39,7 @@ public class LineRasterizerTrivial extends LineRasterizer {
             }
             for (int y = y1; y <= y2; y++) {
                 int x = Math.round((y - q) / k);
-                raster.setPixel(x, y, awtColor);
+                raster.setValue(x, y, awtColor);
             }
 
         } else {
@@ -51,7 +51,7 @@ public class LineRasterizerTrivial extends LineRasterizer {
             }
             for (int x = x1; x <= x2; x++) {
                 int y = Math.round(k * x + q);
-                raster.setPixel(x, y, awtColor);
+                raster.setValue(x, y, awtColor);
             }
 
         }

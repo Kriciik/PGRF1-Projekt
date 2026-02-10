@@ -1,5 +1,6 @@
 package controller;
 
+import raster.ZBuffer;
 import rasterize.LineRasterizer;
 import rasterize.LineRasterizerTrivial;
 import render.Renderer;
@@ -32,6 +33,7 @@ public class Controller3D {
 
     private boolean usePerspective = true;
 
+    private ZBuffer zBuffer;
     public Controller3D(Panel panel) {
         this.panel = panel;
         this.lineRasterizer = new LineRasterizerTrivial(panel.getRaster());
@@ -102,6 +104,8 @@ public class Controller3D {
         axisZ.setColor(new Col(0.0, 0.0, 1.0));
         axisZ.setModel(new Mat4Identity());
 
+        this.zBuffer = new ZBuffer(panel.getRaster());
+
         initListeners();
         drawScene();
     }
@@ -170,7 +174,7 @@ public class Controller3D {
                 //aktuální těleso
                 Solid activeSolid = solids.get(activeIndex);
                 Mat4 model = activeSolid.getModel();
-
+                // test
                 //translace (šipky)
                 if (e.getKeyCode() == KeyEvent.VK_UP) {
                     activeSolid.setModel(model.mul(new Mat4Transl(0, 0.2, 0)));
@@ -233,7 +237,6 @@ public class Controller3D {
             }
             renderer.render(solid);
         }
-
         panel.repaint();
     }
 
@@ -252,6 +255,8 @@ public class Controller3D {
             proj = new Mat4OrthoRH(width, height, 0.1, 100);
         }
 
+        zBuffer.setPixelWithZTest(50, 50, 0.1, new Color(255, 255, 255, 255));
+        zBuffer.setPixelWithZTest(50, 50, 0.5, new Color(240, 50, 50, 255));
         renderer.setProj(proj);
     }
 

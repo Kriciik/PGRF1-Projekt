@@ -2,9 +2,9 @@ package raster;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.util.OptionalInt;
+import java.util.Optional;
 
-public class RasterBufferedImage implements Raster {
+public class RasterBufferedImage implements Raster<Color> {
 
     private BufferedImage image;
 
@@ -13,7 +13,7 @@ public class RasterBufferedImage implements Raster {
     }
 
     @Override
-    public void setPixel(int x, int y, Color color) {
+    public void setValue(int x, int y, Color color) {
 
         if(x < 0 || x > getWidth() - 1|| y < 0 || y > getHeight() - 1) {
             return;
@@ -24,12 +24,12 @@ public class RasterBufferedImage implements Raster {
     }
 
     @Override
-    public OptionalInt getPixel(int x, int y) {
+    public Optional<Color> getValue(int x, int y) {
 
         if(x < 0 || x > getWidth() - 1|| y < 0 || y > getHeight() - 1) {
-            return OptionalInt.empty();
+            return Optional.empty();
         }
-        return OptionalInt.of(image.getRGB(x, y));
+        return Optional.of(image.getRGB(x, y));
     }
 
     @Override
