@@ -16,8 +16,7 @@ public class Line {
         this.x1 = p1.getX();
         this.y1 = p1.getY();
         this.x2 = p2.getX();
-        this.y2 = p2.getY();
-    }
+        this.y2 = p2.getY();   }
 
     public int getX1() {
         return x1;

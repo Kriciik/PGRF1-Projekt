@@ -25,14 +25,15 @@ public class Renderer {
 
     public void render(Solid solid) {
 
-
-
         List<Point3D> vertexBuffer = solid.getVertexBuffer();
         List<Integer> indexBuffer = solid.getIndexBuffer();
 
         if (vertexBuffer == null || indexBuffer == null || indexBuffer.isEmpty()) {
             return;
         }
+
+        // optimalizace nasobení
+        Mat4 mvp = solid.getModel().mul(view).mul(proj);
 
         for (int i = 0; i < indexBuffer.size() - 1; i += 2) {
 
@@ -44,29 +45,15 @@ public class Renderer {
             Point3D pointA = vertexBuffer.get(indexA);
             Point3D pointB = vertexBuffer.get(indexB);
 
-            // TODO: pronásobit model maticí (Done)
-            // TODO: pronásobit view maticí (Done)
-            // TODO: pronásobit proj maticí (Done)
-            pointA = pointA
-                    .mul(solid.getModel())  // Model space > WorldSpace
-                    .mul(view) // World space > View space
-                    .mul(proj); // View space > Clip Space
+            pointA = pointA.mul(mvp);
+            pointB = pointB.mul(mvp);
 
-            if(pointA.getW() == 0) continue;
+            if (pointA.getW() < 0.1 || pointB.getW() < 0.1) {
+                continue;
+            }
 
-            pointB = pointB
-                    .mul(solid.getModel())  // Model space > WorldSpace
-                    .mul(view)  // World space > View space
-                    .mul(proj); // View space > Clip Space
-
-
-            // TODO: ořezání - slide 88
-           // if(pointB.getX() >= -width ) continue;
-
-            // TODO: dehomogenizace (Done)
             pointA = pointA.mul(1/ pointA.getW());
             pointB = pointB.mul(1/ pointB.getW());
-            // Clip space > NDC
 
             //transformace do okna obrazovky
             Vec3D vecA = transformToWindow(pointA);
@@ -74,7 +61,8 @@ public class Renderer {
 
             lineRasterizer.rasterize(
                     (int)vecA.getX(), (int)vecA.getY(),
-                    (int)vecB.getX(), (int)vecB.getY()
+                    (int)vecB.getX(), (int)vecB.getY(),
+                    solid.getColor()
             );
         }
 

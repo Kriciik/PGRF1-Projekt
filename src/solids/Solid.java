@@ -15,8 +15,7 @@ public abstract class Solid {
     protected List<Point3D> vertexBuffer = new ArrayList<Point3D>();
     protected List<Integer> indexBuffer = new ArrayList<Integer>();
     protected Mat4 model = new Mat4Identity();
-    protected Col color = new Col(0xff0000);
-    // TODO: vytvořit nový solid souřadnic x,y osy (ig) ze středu (jako novou třídu)
+    protected Col color = new Col(1.0, 1.0, 1.0);
 
     public List<Integer> getIndexBuffer() {
         return indexBuffer;
@@ -37,5 +36,13 @@ public abstract class Solid {
     public void addIndices(Integer... indices ){
 
         indexBuffer.addAll(Arrays.asList(indices));
+    }
+
+    public void setColor(Col color) {
+        this.color = color;
+    }
+
+    public Col getColor() {
+        return color;
     }
 }
