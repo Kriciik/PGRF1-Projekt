@@ -17,7 +17,7 @@ public class Controller3D {
     private final Panel panel;
     private final Renderer renderer;
     private LineRasterizer lineRasterizer;
-
+    private final TriangleRasterizerTest triangleRasterizerTest;
     // Solids
     private List<Solid> solids = new ArrayList<>();
     private Solid axisX, axisY, axisZ;
@@ -105,7 +105,8 @@ public class Controller3D {
         axisZ.setModel(new Mat4Identity());
 
         this.zBuffer = new ZBuffer(panel.getRaster());
-
+        this.triangleRasterizerTest = new TriangleRasterizerTest(zBuffer);
+        
         initListeners();
         drawScene();
     }
@@ -237,6 +238,10 @@ public class Controller3D {
             }
             renderer.render(solid);
         }
+         // Při funkčním zBufferu uvidím červený pixel, i když se vykresluje jako první
+        zBuffer.setPixelWithZTest(50, 50, 0.1, new Col(0xff0000)); // 0.1
+        zBuffer.setPixelWithZTest(50, 50, 0.5, new Col(0x00ff00)); // 0.5
+        triangleRasterizerTest.rasterize(new Vertex(400,0,0.5), new Vertex(0,300,0.5), new Vertex(799,599,0.5));
         panel.repaint();
     }
 
