@@ -261,8 +261,6 @@ public class Controller3D {
             proj = new Mat4OrthoRH(width, height, 0.1, 100);
         }
 
-        zBuffer.setPixelWithZTest(50, 50, 0.1, new Col(255, 255, 255, 255));
-        zBuffer.setPixelWithZTest(50, 50, 0.5, new Col(240, 50, 50, 255));
         renderer.setProj(proj);
     }
 
