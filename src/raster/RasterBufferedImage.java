@@ -1,10 +1,12 @@
 package raster;
 
+import transforms.Col;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.Optional;
 
-public class RasterBufferedImage implements Raster<Color> {
+public class RasterBufferedImage implements Raster<Col> {
 
     private BufferedImage image;
 
@@ -13,7 +15,7 @@ public class RasterBufferedImage implements Raster<Color> {
     }
 
     @Override
-    public void setValue(int x, int y, Color color) {
+    public void setValue(int x, int y, Col color) {
 
         if(x < 0 || x > getWidth() - 1|| y < 0 || y > getHeight() - 1) {
             return;
@@ -24,12 +26,12 @@ public class RasterBufferedImage implements Raster<Color> {
     }
 
     @Override
-    public Optional<Color> getValue(int x, int y) {
+    public Optional<Col> getValue(int x, int y) {
 
         if(x < 0 || x > getWidth() - 1|| y < 0 || y > getHeight() - 1) {
             return Optional.empty();
         }
-        return Optional.of(image.getRGB(x, y));
+        return Optional.of(new Col(image.getRGB(x, y)));
     }
 
     @Override

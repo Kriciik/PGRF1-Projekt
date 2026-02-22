@@ -1,5 +1,7 @@
 package controller;
 
+import model.Vertex;
+import raster.TriangleRasterizerTest;
 import raster.ZBuffer;
 import rasterize.LineRasterizer;
 import rasterize.LineRasterizerTrivial;
@@ -219,6 +221,7 @@ public class Controller3D {
     private void drawScene() {
         // clear rasteru
         panel.getRaster().clear();
+        zBuffer.getDepthBuffer().clear();
 
         renderer.setView(camera.getViewMatrix());
         renderer.setProj(proj);
@@ -229,18 +232,16 @@ public class Controller3D {
         renderer.render(axisZ);
 
         //renderovaní všech těles
-        for (int i = 0; i < solids.size(); i++) {
-            Solid solid = solids.get(i);
-            if (i == activeIndex) {
-                solid.setColor(new Col(0.0, 1.0, 0.0));
-            } else {
-                solid.setColor(new Col(1.0, 1.0, 1.0));
-            }
-            renderer.render(solid);
-        }
-         // Při funkčním zBufferu uvidím červený pixel, i když se vykresluje jako první
-        zBuffer.setPixelWithZTest(50, 50, 0.1, new Col(0xff0000)); // 0.1
-        zBuffer.setPixelWithZTest(50, 50, 0.5, new Col(0x00ff00)); // 0.5
+//        for (int i = 0; i < solids.size(); i++) {
+//            Solid solid = solids.get(i);
+//            if (i == activeIndex) {
+//                solid.setColor(new Col(0.0, 1.0, 0.0));
+//            } else {
+//                solid.setColor(new Col(1.0, 1.0, 1.0));
+//            }
+//            renderer.render(solid);
+//        }
+
         triangleRasterizerTest.rasterize(new Vertex(400,0,0.5), new Vertex(0,300,0.5), new Vertex(799,599,0.5));
         panel.repaint();
     }
@@ -260,8 +261,8 @@ public class Controller3D {
             proj = new Mat4OrthoRH(width, height, 0.1, 100);
         }
 
-        zBuffer.setPixelWithZTest(50, 50, 0.1, new Color(255, 255, 255, 255));
-        zBuffer.setPixelWithZTest(50, 50, 0.5, new Color(240, 50, 50, 255));
+        zBuffer.setPixelWithZTest(50, 50, 0.1, new Col(255, 255, 255, 255));
+        zBuffer.setPixelWithZTest(50, 50, 0.5, new Col(240, 50, 50, 255));
         renderer.setProj(proj);
     }
 

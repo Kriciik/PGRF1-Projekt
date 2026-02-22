@@ -14,7 +14,7 @@ public class LineRasterizerTrivial extends LineRasterizer {
     @Override
     public void rasterize(int x1, int y1, int x2, int y2, Col color) {
 
-        Color awtColor = new Color(color.getARGB());
+
         int dx = x2 - x1;
 
         if (dx == 0) {
@@ -24,7 +24,7 @@ public class LineRasterizerTrivial extends LineRasterizer {
                 y2 = temp;
             }
             for (int y = y1; y <= y2; y++) {
-                raster.setValue(x1, y, awtColor);
+                raster.setValue(x1, y, color);
             }
             return;
         }
@@ -39,7 +39,7 @@ public class LineRasterizerTrivial extends LineRasterizer {
             }
             for (int y = y1; y <= y2; y++) {
                 int x = Math.round((y - q) / k);
-                raster.setValue(x, y, awtColor);
+                raster.setValue(x, y, color);
             }
 
         } else {
@@ -51,7 +51,7 @@ public class LineRasterizerTrivial extends LineRasterizer {
             }
             for (int x = x1; x <= x2; x++) {
                 int y = Math.round(k * x + q);
-                raster.setValue(x, y, awtColor);
+                raster.setValue(x, y, color);
             }
 
         }
