@@ -1,5 +1,6 @@
 package controller;
 
+import model.Arrow;
 import model.Vertex;
 import raster.TriangleRasterizerTest;
 import raster.ZBuffer;
@@ -24,7 +25,7 @@ public class Controller3D {
     private List<Solid> solids = new ArrayList<>();
     private Solid axisX, axisY, axisZ;
     private int activeIndex = 0;
-
+    private model.Solid arrow;
     // Camera
     private Camera camera;
     private Mat4 proj;
@@ -71,6 +72,8 @@ public class Controller3D {
         Solid pyramid = new Pyramid();
         Solid cylinder = new Cylinder();
         Solid spiral = new Spiral();
+
+        arrow = new Arrow();
 
         // Přidání do seznamu a pozice modelu
         solids.add(pyramid);
@@ -230,7 +233,6 @@ public class Controller3D {
         renderer.render(axisX);
         renderer.render(axisY);
         renderer.render(axisZ);
-
         //renderovaní všech těles
 //        for (int i = 0; i < solids.size(); i++) {
 //            Solid solid = solids.get(i);
@@ -242,7 +244,7 @@ public class Controller3D {
 //            renderer.render(solid);
 //        }
 
-        triangleRasterizerTest.rasterize(new Vertex(400,0,0.5), new Vertex(0,300,0.5), new Vertex(799,599,0.5));
+        //triangleRasterizerTest.rasterize(new Vertex(400,0,0.5), new Vertex(0,300,0.5), new Vertex(799,599,0.5));
         panel.repaint();
     }
 

@@ -72,7 +72,7 @@ public class TriangleRasterizerTest {
             }
         }
 
-        // TODO: 2. část trojuhelniku
+        // TODO: 2. část trojuhelniku (DONE)
         for(int y = by; y  < cy; y++ ) {
 
             // Hrana BC
