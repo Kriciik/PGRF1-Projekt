@@ -1,9 +1,11 @@
 package model;
 
 public enum Topology {
-    LINE_LIST, // seznam úseček
-    LINE_STRIP,
-    TRIANGLE_LIST, // seznam trojuhelníků
-    TRIANGLE_STRIP,
-    TRIANGLE_FAN,
+    POINTS,
+    LINES,
+    LINE_STRIP, // bonus
+    LINE_LOOP, // bonus
+    TRIANGLES,
+    TRIANGLE_STRIP, // bonus
+    TRIANGLE_FAN, // bonus
 }

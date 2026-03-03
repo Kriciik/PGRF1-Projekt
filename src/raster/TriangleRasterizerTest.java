@@ -12,8 +12,6 @@ public class TriangleRasterizerTest {
 
     public void rasterize(Vertex a, Vertex b, Vertex c) {
 
-
-        // TODO: setřídit podle y => Ay <=By <= Cy prohazovat všechny souřadnice bodů (doma) (DONE)
         if (a.getY() > b.getY()) {
             Vertex temp = a;
             a = b;
@@ -42,18 +40,27 @@ public class TriangleRasterizerTest {
         int cy = (int) Math.round(c.getY());
         double cz = c.getZ();
 
-
         // 1. část trojuhelníku
         for(int y = ay; y  < by; y++ ) {
             // Hrana AB
             double tAB = (y - ay) / (double) (by - ay);
             int xAB = (int) Math.round((1 - tAB) * ax + tAB * bx);
             double zAB = (1 - tAB) * az + (tAB * bz);
+            // TODO: spočítat barva (DONE)
+            Col colAB = a.getColor().mul(1 - tAB).add(b.getColor().mul(tAB));
+            Vertex ab = a.mul(1 - tAB).add(b.mul(tAB));
+            // TODO: spočítat normála
+            // TODO: spočítat UV
+
 
             // Hrana AC
             double tAC = (y - ay) / (double) (cy - ay);
             int xAC = (int) Math.round((1 - tAC) * ax + tAC * cx);
             double zAC = (1 - tAB) * cz + (tAB * cz);
+
+            // finta TODO:
+            Col colAC = a.getColor().mul(1 - tAC).add(b.getColor().mul(tAC));
+            Vertex ac = a.mul(1 - tAC).add(b.mul(tAC));
 
             if(xAB > xAC) {
                 int temp  = xAB;
@@ -64,15 +71,16 @@ public class TriangleRasterizerTest {
                 zAC = tempZ;
             }
 
-            for(int x = xAB; x <= xAC; x++) {
+            for(int x = (int) Math.round(ab.getX()); x <= (int) Math.round(ac.getX()); x++) {
                 double t = (x-xAB) / (double) (xAC - xAB);
                 double z = (1 - t) * zAC + t * zAB;
+                Col col = colAB.mul(1 - tAB).add(colAB.mul(tAB));
                 zBuffer.setPixelWithZTest(x, y, z,new Col(65535));
 
             }
         }
 
-        // TODO: 2. část trojuhelniku (DONE)
+        // 2. část trojuhelniku
         for(int y = by; y  < cy; y++ ) {
 
             // Hrana BC

@@ -11,4 +11,16 @@ public class SolidPart {
         this.primitiveCount = primitiveCount;
         this.start = start;
     }
+
+    public Topology getType() {
+        return topology;
+    }
+
+    public int getCount() {
+        return primitiveCount;
+    }
+
+    public int getStartIndex() {
+        return start;
+    }
 }

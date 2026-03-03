@@ -1,17 +1,16 @@
 package controller;
 
 import model.Arrow;
-import model.Vertex;
 import raster.TriangleRasterizerTest;
 import raster.ZBuffer;
 import rasterize.LineRasterizer;
 import rasterize.LineRasterizerTrivial;
 import render.Renderer;
+import renderer.RendererSolid;
 import solids.*;
 import transforms.*;
 import view.Panel;
 
-import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,11 +20,20 @@ public class Controller3D {
     private final Renderer renderer;
     private LineRasterizer lineRasterizer;
     private final TriangleRasterizerTest triangleRasterizerTest;
+    private final RendererSolid rendererSolid;
+
+
+
     // Solids
     private List<Solid> solids = new ArrayList<>();
     private Solid axisX, axisY, axisZ;
     private int activeIndex = 0;
     private model.Solid arrow;
+
+
+
+
+
     // Camera
     private Camera camera;
     private Mat4 proj;
@@ -40,6 +48,10 @@ public class Controller3D {
     public Controller3D(Panel panel) {
         this.panel = panel;
         this.lineRasterizer = new LineRasterizerTrivial(panel.getRaster());
+        this.zBuffer = new ZBuffer(panel.getRaster());
+        this.triangleRasterizerTest = new TriangleRasterizerTest(zBuffer);
+        this.rendererSolid = new RendererSolid(lineRasterizer, triangleRasterizerTest);
+
         camera = new Camera()
                 .withPosition(new Vec3D(0.4, -1.5, 1))
                 .withAzimuth(Math.toRadians(90)) // levá - pravá
@@ -72,9 +84,7 @@ public class Controller3D {
         Solid pyramid = new Pyramid();
         Solid cylinder = new Cylinder();
         Solid spiral = new Spiral();
-
         arrow = new Arrow();
-
         // Přidání do seznamu a pozice modelu
         solids.add(pyramid);
         pyramid.setModel(new Mat4Transl(-2, 0, 0));
@@ -109,9 +119,8 @@ public class Controller3D {
         axisZ.setColor(new Col(0.0, 0.0, 1.0));
         axisZ.setModel(new Mat4Identity());
 
-        this.zBuffer = new ZBuffer(panel.getRaster());
-        this.triangleRasterizerTest = new TriangleRasterizerTest(zBuffer);
-        
+
+
         initListeners();
         drawScene();
     }
@@ -228,6 +237,7 @@ public class Controller3D {
 
         renderer.setView(camera.getViewMatrix());
         renderer.setProj(proj);
+        rendererSolid.render(arrow);
 
         // renderovaní os
         renderer.render(axisX);

@@ -11,11 +11,11 @@ NEW
 5. TODO: Ořezání
 6. (DONE) Dehomogenizace (x/w, y/w, z/w, w/w) > NDC
 7. (DONE) Transformace do okna obrazovky
-8. TODO: Rasterizace trojuhelníky
-9. (DONE - dodělat doma) Viditelnost - Z-Buffer
+8. (DONE) Rasterizace trojuhelníky
+9. (DONE) Viditelnost - Z-Buffer
 BONUS: Osvětlení (3 složky - difuzní, ambientní, a ještě další idk)
 
-
+TODO: vykreslit plochu(quad)/krychli do 5. cv
 
 OLD
 
