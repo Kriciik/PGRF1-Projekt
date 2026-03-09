@@ -9,12 +9,17 @@ public class ZBuffer {
     private final Raster<Col> imageBuffer;
     private final Raster<Double> depthBuffer;
 
-    public ZBuffer(Raster imageBuffer) {
+    public ZBuffer(Raster<Col> imageBuffer) {
         this.imageBuffer = imageBuffer;
         this.depthBuffer = new DepthBuffer(imageBuffer.getWidth(), imageBuffer.getHeight());
     }
 
     public void setPixelWithZTest(int x, int y, double z, Col color) {
+
+        if (x < 0 || x >= imageBuffer.getWidth() || y < 0 || y >= imageBuffer.getHeight()) {
+            return;
+        }
+
         Optional<Double> value = depthBuffer.getValue(x,y);
 
         if(value.isEmpty() || z < value.get()) {

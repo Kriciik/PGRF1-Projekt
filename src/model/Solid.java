@@ -12,7 +12,7 @@ public abstract class Solid {
     protected final List<Vertex> vertexBuffer;
     protected final List<Integer> indexBuffer;
     protected final List<SolidPart> partBuffer;
-    private final Mat4 modelMat;
+    private Mat4 modelMat;
 
     public Solid(final List<Vertex> vertexBuffer, final List<Integer> indexBuffer,
                  final List<SolidPart> partBuffer, final Mat4 modelMat) {
@@ -35,5 +35,13 @@ public abstract class Solid {
 
     public void addIndices (Integer... indices){
         indexBuffer.addAll(Arrays.asList(indices));
+    }
+
+    public Mat4 getModel() {
+        return modelMat;
+    }
+
+    public void setModel(Mat4 modelMat) {
+        this.modelMat = modelMat;
     }
 }

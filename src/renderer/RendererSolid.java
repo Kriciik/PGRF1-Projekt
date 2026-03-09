@@ -6,23 +6,34 @@ import model.Vertex;
 import raster.TriangleRasterizerTest;
 import rasterize.LineRasterizer;
 import transforms.Mat4;
+import transforms.Mat4Identity;
+import transforms.Point3D;
 
 public class RendererSolid {
     private LineRasterizer lineRasterizer;
     private TriangleRasterizerTest triangleRasterizerTest;
 
-    public RendererSolid(LineRasterizer lineRasterizer, TriangleRasterizerTest triangleRasterizerTest) {
+    // Přidané proměnné pro zobrazovací řetězec
+    private Mat4 view = new Mat4Identity();
+    private Mat4 proj = new Mat4Identity();
+    private int width;
+    private int height;
+
+    public RendererSolid(LineRasterizer lineRasterizer, TriangleRasterizerTest triangleRasterizerTest, int width, int height) {
         this.lineRasterizer = lineRasterizer;
         this.triangleRasterizerTest = triangleRasterizerTest;
+        this.width = width;
+        this.height = height;
     }
 
     public void render(Solid solid){
+        Mat4 mvp = solid.getModel().mul(view).mul(proj);
+
         for(SolidPart part : solid.getPartBuffer()){
             switch(part.getType()){
                 case POINTS:
                     // TODO: points
                 case LINES:
-                    // TODO: lines
                     int index = part.getStartIndex();
 
                     for(int i = 0; i < part.getCount(); i++){
@@ -32,22 +43,18 @@ public class RendererSolid {
                         Vertex a = solid.getVertexBuffer().get(indexA);
                         Vertex b = solid.getVertexBuffer().get(indexB);
 
-                        // TODO: Pronásobit MVP
-                        // getModel().mul(view).mul(proj);
+                        Vertex aT = transformVertex(a, mvp);
+                        Vertex bT = transformVertex(b, mvp);
 
-                        // TODO: ořezání
+                        // if bod za kamerou, nekreslím, usečku nekreslím
+                        if (aT == null || bT == null) continue;
 
-                        // TODO: Dehomogenizace
-
-                        // TODO: transformace do okna
-
-                        // TODO: rasterizace + z-buffer
                         lineRasterizer.rasterize(
-                                (int) Math.round(a.getX()),
-                                (int) Math.round(a.getY()),
-                                (int) Math.round(b.getX()),
-                                (int) Math.round(b.getY())
-                                );
+                                (int) Math.round(aT.getX()),
+                                (int) Math.round(aT.getY()),
+                                (int) Math.round(bT.getX()),
+                                (int) Math.round(bT.getY())
+                        );
                     }
                     break;
 
@@ -64,20 +71,47 @@ public class RendererSolid {
                         Vertex b = solid.getVertexBuffer().get(indexB);
                         Vertex c = solid.getVertexBuffer().get(indexC);
 
-                        // --|--
+                        // transformace vrcholů
+                        Vertex aT = transformVertex(a, mvp);
+                        Vertex bT = transformVertex(b, mvp);
+                        Vertex cT = transformVertex(c, mvp);
 
-                        triangleRasterizerTest.rasterize(a,b,c);
+                        // if bod za kamerou, nekreslím, usečku nekreslím
+                        if (aT == null || bT == null || cT == null) continue;
+
+                        triangleRasterizerTest.rasterize(aT, bT, cT);
                     }
-
                     break;
             }
         }
     }
 
+    private Vertex transformVertex(Vertex v, Mat4 mvp) {
+        Point3D p = v.getPosition().mul(mvp);
+        // if W <= 0, nevykreslím
+        if (p.getW() <= 0) return null;
+
+        // NDC
+        double x = p.getX() / p.getW();
+        double y = p.getY() / p.getW();
+        double z = p.getZ() / p.getW();
+
+        // test, jestli je mimo obrazovku
+        if (x < -1 || x > 1 || y < -1 || y > 1 || z < 0 || z > 1) {
+            return null;
+        }
+        // transformace do okna
+        double winX = (x + 1) / 2.0 * (width - 1);
+        double winY = (1 - y) / 2.0 * (height - 1);
+
+        return new Vertex(winX, winY, z, v.getColor());
+    }
+
+    public void setView(Mat4 view) { this.view = view; }
+    public void setProj(Mat4 proj) { this.proj = proj; }
     public void setLineRasterizer(LineRasterizer lineRasterizer) {
         this.lineRasterizer = lineRasterizer;
     }
-
     public void setTriangleRasterizerTest(TriangleRasterizerTest triangleRasterizerTest) {
         this.triangleRasterizerTest = triangleRasterizerTest;
     }

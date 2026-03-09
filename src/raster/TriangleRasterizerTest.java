@@ -3,6 +3,7 @@ package raster;
 import model.Vertex;
 import transforms.Col;
 import transforms.Point3D;
+import utils.Lerp;
 
 public class TriangleRasterizerTest {
     private final ZBuffer zBuffer;
@@ -12,21 +13,11 @@ public class TriangleRasterizerTest {
 
     public void rasterize(Vertex a, Vertex b, Vertex c) {
 
-        if (a.getY() > b.getY()) {
-            Vertex temp = a;
-            a = b;
-            b = temp;
-        }
-        if (a.getY() > c.getY()) {
-            Vertex temp = a;
-            a = c;
-            c = temp;
-        }
-        if (b.getY() > c.getY()) {
-            Vertex temp = b;
-            b = c;
-            c = temp;
-        }
+        if (a.getY() > b.getY()) { Vertex temp = a; a = b; b = temp; }
+        if (a.getY() > c.getY()) { Vertex temp = a; a = c; c = temp; }
+        if (b.getY() > c.getY()) { Vertex temp = b; b = c; c = temp; }
+
+        Lerp<Vertex> lerp = new Lerp<>();
 
         int ax = (int) Math.round(a.getX());
         int ay = (int) Math.round(a.getY());
@@ -40,42 +31,37 @@ public class TriangleRasterizerTest {
         int cy = (int) Math.round(c.getY());
         double cz = c.getZ();
 
+
+
+
         // 1. část trojuhelníku
         for(int y = ay; y  < by; y++ ) {
             // Hrana AB
             double tAB = (y - ay) / (double) (by - ay);
-            int xAB = (int) Math.round((1 - tAB) * ax + tAB * bx);
-            double zAB = (1 - tAB) * az + (tAB * bz);
-            // TODO: spočítat barva (DONE)
-            Col colAB = a.getColor().mul(1 - tAB).add(b.getColor().mul(tAB));
-            Vertex ab = a.mul(1 - tAB).add(b.mul(tAB));
-            // TODO: spočítat normála
-            // TODO: spočítat UV
-
+            Vertex ab = lerp.lerp(a, b, tAB);
 
             // Hrana AC
             double tAC = (y - ay) / (double) (cy - ay);
-            int xAC = (int) Math.round((1 - tAC) * ax + tAC * cx);
-            double zAC = (1 - tAB) * cz + (tAB * cz);
+            Vertex ac = lerp.lerp(a, c, tAC);
 
-            // finta TODO:
-            Col colAC = a.getColor().mul(1 - tAC).add(b.getColor().mul(tAC));
-            Vertex ac = a.mul(1 - tAC).add(b.mul(tAC));
+            int xAB = (int) Math.round(ab.getX());
+            int xAC = (int) Math.round(ac.getX());
 
+            // check, if zprava doleva
             if(xAB > xAC) {
-                int temp  = xAB;
-                double tempZ = zAB;
-                xAB = xAC;
-                xAC = temp;
-                zAB = zAC;
-                zAC = tempZ;
+                Vertex temp = ab;
+                ab = ac;
+                ac = temp;
+
+                xAB = (int) Math.round(ab.getX());
+                xAC = (int) Math.round(ac.getX());
             }
 
-            for(int x = (int) Math.round(ab.getX()); x <= (int) Math.round(ac.getX()); x++) {
-                double t = (x-xAB) / (double) (xAC - xAB);
-                double z = (1 - t) * zAC + t * zAB;
-                Col col = colAB.mul(1 - tAB).add(colAB.mul(tAB));
-                zBuffer.setPixelWithZTest(x, y, z,new Col(65535));
+            for(int x = xAB; x <= xAC; x++) {
+                double t = (xAC == xAB) ? 0 : (x - xAB) / (double) (xAC - xAB); // dělení 0 nn
+
+                Vertex pixel = lerp.lerp(ab, ac, t);
+                zBuffer.setPixelWithZTest(x, y, pixel.getZ(), pixel.getColor());
 
             }
         }
@@ -85,26 +71,31 @@ public class TriangleRasterizerTest {
 
             // Hrana BC
             double tBC = (double) (y - by) / (cy - by);
-            int xBC = (int) Math.round((1 - tBC) * bx + tBC * cx);
-            double zBC = (1 - tBC) * cz + (tBC * bz);
+            Vertex bc = lerp.lerp(b, c, tBC);
 
             // Hrana AC
             double tAC = (double) (y - ay) / (cy - ay);
-            int xAC = (int) Math.round((1 - tAC) * ax + (tAC * cx));
-            double zAC = (1 - tAC) * az + tAC * cz;
+            Vertex ac = lerp.lerp(a, c, tAC);
 
+            // Vytažení X souřadnic
+            int xBC = (int) Math.round(bc.getX());
+            int xAC = (int) Math.round(ac.getX());
+
+            // check, if zprava doleva
             if(xBC > xAC) {
-                int temp  = xBC;
-                double tempZ = zBC;
-                xBC = xAC;
-                xAC = temp;
-                zBC = zAC;
-                zAC = tempZ;
+                Vertex temp = bc;
+                bc = ac;
+                ac = temp;
+
+                xBC = (int) Math.round(bc.getX());
+                xAC = (int) Math.round(ac.getX());
             }
+
             for(int x = xBC; x <= xAC; x++) {
-                double t = (x-xBC) / (double) (xAC - xBC);
-                double z = (1 - t) * zBC + t * zAC;
-                zBuffer.setPixelWithZTest(x, y, z,new Col(65535));
+                double t = (xAC == xBC) ? 0 : (x - xBC) / (double) (xAC - xBC); // dělení 0 nn
+
+                Vertex pixel = lerp.lerp(bc, ac, t);
+                zBuffer.setPixelWithZTest(x, y, pixel.getZ(), pixel.getColor());
             }
         }
 

@@ -1,6 +1,7 @@
 package controller;
 
 import model.Arrow;
+import model.Quad;
 import raster.TriangleRasterizerTest;
 import raster.ZBuffer;
 import rasterize.LineRasterizer;
@@ -22,18 +23,14 @@ public class Controller3D {
     private final TriangleRasterizerTest triangleRasterizerTest;
     private final RendererSolid rendererSolid;
 
-
-
     // Solids
     private List<Solid> solids = new ArrayList<>();
     private Solid axisX, axisY, axisZ;
+    private Solid pyramid;
     private int activeIndex = 0;
+
     private model.Solid arrow;
-
-
-
-
-
+    private model.Solid quad;
     // Camera
     private Camera camera;
     private Mat4 proj;
@@ -42,15 +39,22 @@ public class Controller3D {
     private int oldX, oldY;
     private float mouseSensitivity = 0.005f;
 
+    // perspektiva proměnná
     private boolean usePerspective = true;
 
     private ZBuffer zBuffer;
+
     public Controller3D(Panel panel) {
         this.panel = panel;
         this.lineRasterizer = new LineRasterizerTrivial(panel.getRaster());
         this.zBuffer = new ZBuffer(panel.getRaster());
         this.triangleRasterizerTest = new TriangleRasterizerTest(zBuffer);
-        this.rendererSolid = new RendererSolid(lineRasterizer, triangleRasterizerTest);
+        this.rendererSolid = new RendererSolid(
+                lineRasterizer,
+                triangleRasterizerTest,
+                panel.getRaster().getWidth(),
+                panel.getRaster().getHeight()
+                );
 
         camera = new Camera()
                 .withPosition(new Vec3D(0.4, -1.5, 1))
@@ -69,43 +73,13 @@ public class Controller3D {
                 proj
         );
 
-        // cubic pointy
-        Point3D pA = new Point3D(-1, -1, 0.5);
-        Point3D pB = new Point3D(-1, 2, 0.5);
-        Point3D pC = new Point3D(1, 2, 0.5);
-        Point3D pD = new Point3D(1, -1, 0.5);
-
-        // 1. BEZIER
-        Solid bezier = new SmartCubic(Cubic.BEZIER, pA, pB, pC, pD);
-        // 2. COONS
-        Solid coons = new SmartCubic(Cubic.COONS, pA, pB, pC, pD);
-        // 3. FERGUSON
-        Solid ferguson = new SmartCubic(Cubic.FERGUSON, pA, pD, pB, pC);
-        Solid pyramid = new Pyramid();
-        Solid cylinder = new Cylinder();
-        Solid spiral = new Spiral();
         arrow = new Arrow();
+        quad = new Quad();
+        quad.setModel(new Mat4Transl(0,3,0));
         // Přidání do seznamu a pozice modelu
+        pyramid = new Pyramid();
         solids.add(pyramid);
         pyramid.setModel(new Mat4Transl(-2, 0, 0));
-
-        solids.add(cylinder);
-        cylinder.setModel(new Mat4Transl(0, 2, 0));
-
-        solids.add(spiral);
-        spiral.setModel(new Mat4Transl(2, 0, 0));
-
-        solids.add(ferguson);
-        ferguson.setModel(new Mat4Transl(0, 0, 0));
-        ferguson.setModel(new Mat4RotX(Math.toRadians(90)));
-
-        solids.add(bezier);
-        bezier.setModel(new Mat4Transl(0, 0 , 0));
-        bezier.setModel(new Mat4RotX(Math.toRadians(90)).mul(new Mat4Transl(0, 0, 1)));
-
-        solids.add(coons);
-        coons.setModel(new Mat4Transl(0, 0, 0));
-        coons.setModel(new Mat4RotX(Math.toRadians(90)).mul(new Mat4Transl(0, 0, -1)));
 
         axisX = new AxisX();
         axisX.setColor(new Col(1.0, 0.0, 0.0));
@@ -118,8 +92,6 @@ public class Controller3D {
         axisZ = new AxisZ();
         axisZ.setColor(new Col(0.0, 0.0, 1.0));
         axisZ.setModel(new Mat4Identity());
-
-
 
         initListeners();
         drawScene();
@@ -237,7 +209,12 @@ public class Controller3D {
 
         renderer.setView(camera.getViewMatrix());
         renderer.setProj(proj);
+
+        rendererSolid.setView(camera.getViewMatrix());
+        rendererSolid.setProj(proj);
+
         rendererSolid.render(arrow);
+        rendererSolid.render(quad);
 
         // renderovaní os
         renderer.render(axisX);
@@ -254,7 +231,6 @@ public class Controller3D {
 //            renderer.render(solid);
 //        }
 
-        //triangleRasterizerTest.rasterize(new Vertex(400,0,0.5), new Vertex(0,300,0.5), new Vertex(799,599,0.5));
         panel.repaint();
     }
 
