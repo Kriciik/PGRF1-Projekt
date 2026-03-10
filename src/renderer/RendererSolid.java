@@ -8,6 +8,7 @@ import rasterize.LineRasterizer;
 import transforms.Mat4;
 import transforms.Mat4Identity;
 import transforms.Point3D;
+import utils.Lerp;
 
 public class RendererSolid {
     private LineRasterizer lineRasterizer;
@@ -28,7 +29,7 @@ public class RendererSolid {
 
     public void render(Solid solid){
         Mat4 mvp = solid.getModel().mul(view).mul(proj);
-
+        Lerp<Vertex> lerp = new Lerp<>();
         for(SolidPart part : solid.getPartBuffer()){
             switch(part.getType()){
                 case POINTS:
@@ -71,15 +72,52 @@ public class RendererSolid {
                         Vertex b = solid.getVertexBuffer().get(indexB);
                         Vertex c = solid.getVertexBuffer().get(indexC);
 
-                        // transformace vrcholů
-                        Vertex aT = transformVertex(a, mvp);
-                        Vertex bT = transformVertex(b, mvp);
-                        Vertex cT = transformVertex(c, mvp);
 
-                        // if bod za kamerou, nekreslím, usečku nekreslím
+//                        // transformace vrcholů
+//                        Vertex aT = transformVertex(a, mvp);
+//                        Vertex bT = transformVertex(b, mvp);
+//                        Vertex cT = transformVertex(c, mvp);
+
+                        if (a.getZ() > b.getZ()) { Vertex temp = a; a = b; b = temp; }
+                        if (a.getZ() > c.getZ()) { Vertex temp = a; a = c; c = temp; }
+                        if (b.getZ() > c.getZ()) { Vertex temp = b; b = c; c = temp; }
+
+                        double zMin = 0;
+                        // procházet vrcholy podle z, od max po min
+
+                        if(a.getZ() < zMin){
+                            continue;
+                        }
+                        if(b.getZ() < zMin){
+                            // TODO: spočítat nový trojuhelník
+                                // TODO: hledám vrchol ab, ac
+                                // TODO: spočítat interpolační koeficienty a najít vrcholy
+
+                            double ab =(zMin - a.getZ()) / (b.getZ() - a.getZ());
+                            double ac =(zMin - a.getZ()) / (c.getZ() - a.getZ());
+
+                            double tAB = (zMin - a.getZ()) / ( b.getZ() - a.getZ());
+
+
+                            return;
+
+                        }
+                        if(c.getZ() < zMin)
+                        {
+                            // TODO: spočítat 2 nový trojuhelník
+                            // TODO: rasterizovat
+
+                        }
+
+                        // TODO: dehomog
+
+                        // TODO: transformace do okna
+                        // TODO: Rasterizace
+
+                        // if bod za kamerou, usečku nekreslím
                         if (aT == null || bT == null || cT == null) continue;
 
-                        triangleRasterizerTest.rasterize(aT, bT, cT);
+                        triangleRasterizerTest.rasterize(aT, bT, cT, solid.getShader());
                     }
                     break;
             }
@@ -88,6 +126,10 @@ public class RendererSolid {
 
     private Vertex transformVertex(Vertex v, Mat4 mvp) {
         Point3D p = v.getPosition().mul(mvp);
+        // TODO: Fast clip
+        // TODO: Ořezaní podle z
+        // TODO:
+
         // if W <= 0, nevykreslím
         if (p.getW() <= 0) return null;
 
@@ -100,7 +142,6 @@ public class RendererSolid {
         if (x < -1 || x > 1 || y < -1 || y > 1 || z < 0 || z > 1) {
             return null;
         }
-        // transformace do okna
         double winX = (x + 1) / 2.0 * (width - 1);
         double winY = (1 - y) / 2.0 * (height - 1);
 
@@ -109,6 +150,7 @@ public class RendererSolid {
 
     public void setView(Mat4 view) { this.view = view; }
     public void setProj(Mat4 proj) { this.proj = proj; }
+
     public void setLineRasterizer(LineRasterizer lineRasterizer) {
         this.lineRasterizer = lineRasterizer;
     }

@@ -1,5 +1,7 @@
 package model;
 
+import shader.Shader;
+import shader.ShaderConstant;
 import transforms.Mat4;
 
 import java.util.ArrayList;
@@ -13,6 +15,7 @@ public abstract class Solid {
     protected final List<Integer> indexBuffer;
     protected final List<SolidPart> partBuffer;
     private Mat4 modelMat;
+    protected Shader shader = new ShaderConstant();
 
     public Solid(final List<Vertex> vertexBuffer, final List<Integer> indexBuffer,
                  final List<SolidPart> partBuffer, final Mat4 modelMat) {
@@ -43,5 +46,13 @@ public abstract class Solid {
 
     public void setModel(Mat4 modelMat) {
         this.modelMat = modelMat;
+    }
+
+    public Shader getShader() {
+        return shader;
+    }
+
+    public void setShader(Shader shader) {
+        this.shader = shader;
     }
 }

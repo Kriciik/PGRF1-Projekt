@@ -2,17 +2,23 @@ package controller;
 
 import model.Arrow;
 import model.Quad;
+import model.Vertex;
 import raster.TriangleRasterizerTest;
 import raster.ZBuffer;
 import rasterize.LineRasterizer;
 import rasterize.LineRasterizerTrivial;
 import render.Renderer;
 import renderer.RendererSolid;
+import shader.Shader;
 import solids.*;
 import transforms.*;
 import view.Panel;
 
+import javax.imageio.ImageIO;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,6 +49,10 @@ public class Controller3D {
     private boolean usePerspective = true;
 
     private ZBuffer zBuffer;
+
+
+    // textury
+    private final BufferedImage dioTexture;
 
     public Controller3D(Panel panel) {
         this.panel = panel;
@@ -92,6 +102,14 @@ public class Controller3D {
         axisZ = new AxisZ();
         axisZ.setColor(new Col(0.0, 0.0, 1.0));
         axisZ.setModel(new Mat4Identity());
+
+        // Textury
+        try {
+            dioTexture = ImageIO.read(new File("./res/textures/dio.png"));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
 
         initListeners();
         drawScene();
@@ -193,6 +211,41 @@ public class Controller3D {
                 }
                 if (e.getKeyCode() == KeyEvent.VK_SUBTRACT || e.getKeyCode() == KeyEvent.VK_MINUS) {
                     activeSolid.setModel(model.mul(new Mat4Scale(0.9)));
+                }
+
+                if(e.getKeyCode() == KeyEvent.VK_T){
+                    quad.setShader(new Shader() {
+                        @Override
+                        public Col getColor(Vertex pixel) {
+                            int x = (int) Math.round(pixel.getUv().getX() * dioTexture.getWidth() - 1);
+                            int y = (int) Math.round(pixel.getUv().getY() * dioTexture.getHeight() - 1);
+
+                            if(x < 0 || x > dioTexture.getWidth() || y < 0 || y > dioTexture.getHeight()) return new Col(0xff0000);
+                            return new Col(dioTexture.getRGB(x,y));
+                        }
+                    });
+                }
+
+                if(e.getKeyCode() == KeyEvent.VK_P){
+                    quad.setShader(new Shader() {
+                        @Override
+                        public Col getColor(Vertex pixel) {
+                           Col pixelColor = new Col(255, 255, 255);
+
+                            // Ambient
+                            Col ambientColor = new Col(50, 20, 20);
+
+                            // Diffuse
+                            Col diffuseColor = new Col(0, 100, 0);
+
+                            // TODO: normála
+                            // TODO: pozice světla Point3D lightPosition = new Point3D(0,0,0.5)
+
+                            // TODO: vektor ke světlu = pozice světla - pozice vertexu (vertex je raster)
+
+                           return pixelColor.mul(ambientColor);
+                        }
+                    });
                 }
 
                 drawScene();

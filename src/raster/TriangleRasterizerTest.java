@@ -1,6 +1,9 @@
 package raster;
 
 import model.Vertex;
+import shader.Shader;
+import shader.ShaderConstant;
+import shader.ShaderInterpolated;
 import transforms.Col;
 import transforms.Point3D;
 import utils.Lerp;
@@ -11,8 +14,9 @@ public class TriangleRasterizerTest {
         this.zBuffer = zBuffer;
     }
 
-    public void rasterize(Vertex a, Vertex b, Vertex c) {
+    public void rasterize(Vertex a, Vertex b, Vertex c, Shader shader) {
 
+        //Shader shader = new ShaderConstant();
         if (a.getY() > b.getY()) { Vertex temp = a; a = b; b = temp; }
         if (a.getY() > c.getY()) { Vertex temp = a; a = c; c = temp; }
         if (b.getY() > c.getY()) { Vertex temp = b; b = c; c = temp; }
@@ -20,17 +24,15 @@ public class TriangleRasterizerTest {
         Lerp<Vertex> lerp = new Lerp<>();
 
         int ax = (int) Math.round(a.getX());
-        int ay = (int) Math.round(a.getY());
         double az = a.getZ();
-
-        int bx = (int) Math.round(b.getX());
-        int by = (int) Math.round(b.getY());
         double bz = b.getZ();
-
+        int bx = (int) Math.round(b.getX());
         int cx = (int) Math.round(c.getX());
-        int cy = (int) Math.round(c.getY());
         double cz = c.getZ();
 
+        int ay = (int) Math.round(a.getY());
+        int by = (int) Math.round(b.getY());
+        int cy = (int) Math.round(c.getY());
 
 
 
@@ -61,7 +63,7 @@ public class TriangleRasterizerTest {
                 double t = (xAC == xAB) ? 0 : (x - xAB) / (double) (xAC - xAB); // dělení 0 nn
 
                 Vertex pixel = lerp.lerp(ab, ac, t);
-                zBuffer.setPixelWithZTest(x, y, pixel.getZ(), pixel.getColor());
+                zBuffer.setPixelWithZTest(x, y, pixel.getZ(), shader.getColor(pixel));
 
             }
         }
