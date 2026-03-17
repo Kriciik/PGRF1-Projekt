@@ -30,6 +30,7 @@ public class RendererSolid {
     public void render(Solid solid){
         Mat4 mvp = solid.getModel().mul(view).mul(proj);
         Lerp<Vertex> lerp = new Lerp<>();
+
         for(SolidPart part : solid.getPartBuffer()){
             switch(part.getType()){
                 case POINTS:

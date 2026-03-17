@@ -4,6 +4,7 @@ import transforms.*;
 
 public class Vertex implements Vectorizable<Vertex> {
     private final Point3D position;
+    private final Point3D positionWorldSpace;
     private final Col color;
     private final Vec2D uv;
     private final Vec3D normal;

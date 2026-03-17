@@ -236,14 +236,23 @@ public class Controller3D {
                             Col ambientColor = new Col(50, 20, 20);
 
                             // Diffuse
-                            Col diffuseColor = new Col(0, 100, 0);
+                            Col diffuseColor = new Col(0, 255, 0);
 
-                            // TODO: normála
-                            // TODO: pozice světla Point3D lightPosition = new Point3D(0,0,0.5)
+                            // Mám možnost počítat ve worldSpace nebo viewSpace
+                            // všechny proměnné, které vstupují do výpočtu, musí být ve správných souřadnicích
+                            // pokud zrcadlová složka nn, stačí worldSpace
+
+                            Point3D lightPosition = new Point3D(0, 0, 0.5); // worldSpace
+                            // počítání normály v modelu TODO
+                            Vec3D normal = pixel.getNormal().normalized().get(); // worldSpace
+                            // Vec3D lightVector = pixel.getPositionWorldSpace(); // musí být ve worldSpace
+
+                            // Spočíáme uhel mezi normálou a lightVectorem
+                            // TODO: double lDotN = Math.max(0,lightVector.dot(normal));
 
                             // TODO: vektor ke světlu = pozice světla - pozice vertexu (vertex je raster)
 
-                           return pixelColor.mul(ambientColor);
+                           return pixelColor.mul(ambientColor.add(diffuseColor.mul(lDotN)));
                         }
                     });
                 }
