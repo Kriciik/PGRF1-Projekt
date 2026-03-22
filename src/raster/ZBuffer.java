@@ -2,8 +2,6 @@ package raster;
 
 import transforms.Col;
 
-import java.awt.*;
-import java.util.Optional;
 
 public class ZBuffer {
     private final Raster<Col> imageBuffer;

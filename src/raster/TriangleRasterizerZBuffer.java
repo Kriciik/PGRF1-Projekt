@@ -2,7 +2,6 @@ package raster;
 
 import model.Vertex;
 import shader.Shader;
-import transforms.Col;
 import utils.Lerp;
 
 public class TriangleRasterizerZBuffer extends TriangleRasterizer {
