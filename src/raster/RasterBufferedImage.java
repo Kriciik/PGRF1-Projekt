@@ -14,6 +14,9 @@ public class RasterBufferedImage implements Raster<Col> {
         image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
     }
 
+    public RasterBufferedImage(BufferedImage loadedImage) {
+        this.image = loadedImage;
+    }
     @Override
     public void setValue(int x, int y, Col color) {
 

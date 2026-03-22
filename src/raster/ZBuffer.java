@@ -20,12 +20,11 @@ public class ZBuffer {
             return;
         }
 
-        Optional<Double> value = depthBuffer.getValue(x,y);
+        double currentZ = depthBuffer.getValue(x, y).orElse(1.0);
 
-        if(value.isEmpty() || z < value.get()) {
-
+        if (z < currentZ) {
             depthBuffer.setValue(x, y, z);
-            imageBuffer.setValue(x,y,color);
+            imageBuffer.setValue(x, y, color);
         }
 
     }
@@ -33,4 +32,26 @@ public class ZBuffer {
     public Raster<Double> getDepthBuffer() {
         return depthBuffer;
     }
+
+    public int getWidth() {
+        return imageBuffer.getWidth();
+    }
+
+    public int getHeight() {
+        return imageBuffer.getHeight();
+    }
+
+    public void clear(Col backgroundColor) {
+        for (int y = 0; y < imageBuffer.getHeight(); y++) {
+            for (int x = 0; x < imageBuffer.getWidth(); x++) {
+                imageBuffer.setValue(x, y, backgroundColor);
+            }
+        }
+        for (int y = 0; y < depthBuffer.getHeight(); y++) {
+            for (int x = 0; x < depthBuffer.getWidth(); x++) {
+                depthBuffer.setValue(x, y, 1.0);
+            }
+        }
+    }
+
 }

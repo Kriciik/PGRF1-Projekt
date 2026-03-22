@@ -1,22 +1,22 @@
 package controller;
 
-import model.Arrow;
-import model.Quad;
-import model.Vertex;
-import raster.TriangleRasterizerTest;
+import model.*;
+import raster.RasterBufferedImage;
+import raster.TriangleRasterizerZBuffer;
 import raster.ZBuffer;
 import rasterize.LineRasterizer;
 import rasterize.LineRasterizerTrivial;
-import render.Renderer;
+import renderer.Renderer;
 import renderer.RendererSolid;
+import renderer.RendererWireframe;
 import shader.Shader;
-import solids.*;
+import shader.ShaderConstant;
 import transforms.*;
 import view.Panel;
 
 import javax.imageio.ImageIO;
 import java.awt.event.*;
-import java.awt.image.BufferedImage;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -24,19 +24,28 @@ import java.util.List;
 
 public class Controller3D {
     private final Panel panel;
-    private final Renderer renderer;
+
     private LineRasterizer lineRasterizer;
-    private final TriangleRasterizerTest triangleRasterizerTest;
+    private final TriangleRasterizerZBuffer triangleRasterizerZBuffer;
+
+    private final RendererWireframe rendererWireframe;
     private final RendererSolid rendererSolid;
+    private Renderer currentRenderer;
 
     // Solids
+    private Solid sphere;
+    private Solid cylinder;
+    private Solid cube;
     private List<Solid> solids = new ArrayList<>();
-    private Solid axisX, axisY, axisZ;
-    private Solid pyramid;
+    private Solid axes;
     private int activeIndex = 0;
 
-    private model.Solid arrow;
-    private model.Solid quad;
+    // Light
+    private Solid lightBulb;
+    private boolean useLighting = false;
+    private Col ambientLightColor = new Col(40, 40, 40);
+    private Col diffuseLightColor = new Col(255, 255, 0);
+
     // Camera
     private Camera camera;
     private Mat4 proj;
@@ -52,20 +61,24 @@ public class Controller3D {
 
 
     // textury
-    private final BufferedImage dioTexture;
+    private boolean useTexture = false;
 
     public Controller3D(Panel panel) {
         this.panel = panel;
         this.lineRasterizer = new LineRasterizerTrivial(panel.getRaster());
         this.zBuffer = new ZBuffer(panel.getRaster());
-        this.triangleRasterizerTest = new TriangleRasterizerTest(zBuffer);
+        this.triangleRasterizerZBuffer = new TriangleRasterizerZBuffer(zBuffer);
         this.rendererSolid = new RendererSolid(
                 lineRasterizer,
-                triangleRasterizerTest,
+                triangleRasterizerZBuffer,
                 panel.getRaster().getWidth(),
                 panel.getRaster().getHeight()
                 );
-
+        this.rendererWireframe = new RendererWireframe(
+                lineRasterizer,
+                panel.getRaster().getWidth(),
+                panel.getRaster().getHeight()
+        );
         camera = new Camera()
                 .withPosition(new Vec3D(0.4, -1.5, 1))
                 .withAzimuth(Math.toRadians(90)) // levá - pravá
@@ -75,41 +88,34 @@ public class Controller3D {
                 panel.getRaster().getHeight() / (double)panel.getRaster().getWidth(),
                 0.1,
                 100);
-        this.renderer = new Renderer(
-                lineRasterizer,
-                panel.getRaster().getWidth(),
-                panel.getRaster().getHeight(),
-                camera.getViewMatrix(),
-                proj
-        );
 
-        arrow = new Arrow();
-        quad = new Quad();
-        quad.setModel(new Mat4Transl(0,3,0));
-        // Přidání do seznamu a pozice modelu
-        pyramid = new Pyramid();
-        solids.add(pyramid);
-        pyramid.setModel(new Mat4Transl(-2, 0, 0));
+        sphere = new Sphere(new Point3D(0, 0, -3), 1.0, 16, 16, new Col(0xffffff));
+        cube = new Cube();
+        cylinder = new Cylinder(0.6, 2.0, 20, new Col(0xff00ff));
+        lightBulb = new Sphere(new Point3D(0, 0, 0), 0.2, 10, 10, diffuseLightColor);
+        axes = new Axes();
 
-        axisX = new AxisX();
-        axisX.setColor(new Col(1.0, 0.0, 0.0));
-        axisX.setModel(new Mat4Identity());
+        cube.setModel(new Mat4Transl(-3, 0, 0));
+        cylinder.setModel(new Mat4Transl(3, 0, 0));
 
-        axisY = new AxisY();
-        axisY.setColor(new Col(0.0, 1.0, 0.0));
-        axisY.setModel(new Mat4Identity());
 
-        axisZ = new AxisZ();
-        axisZ.setColor(new Col(0.0, 0.0, 1.0));
-        axisZ.setModel(new Mat4Identity());
+        lightBulb.setModel(new Mat4Transl(0, 3, 3));
 
+        solids.clear();
+        solids.add(sphere);
+        solids.add(cube);
+        solids.add(cylinder);
+
+        solids.add(lightBulb);
         // Textury
         try {
-            dioTexture = ImageIO.read(new File("./res/textures/dio.png"));
+            cylinder.setTexture(new RasterBufferedImage(ImageIO.read(new File("./res/textures/dio.png"))));
+            cube.setTexture(new RasterBufferedImage(ImageIO.read(new File("./res/textures/gyro.png"))));
+            sphere.setTexture(new RasterBufferedImage(ImageIO.read(new File("./res/textures/jotaro.png"))));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
+        this.currentRenderer = this.rendererSolid;
 
         initListeners();
         drawScene();
@@ -179,7 +185,7 @@ public class Controller3D {
                 //aktuální těleso
                 Solid activeSolid = solids.get(activeIndex);
                 Mat4 model = activeSolid.getModel();
-                // test
+
                 //translace (šipky)
                 if (e.getKeyCode() == KeyEvent.VK_UP) {
                     activeSolid.setModel(model.mul(new Mat4Transl(0, 0.2, 0)));
@@ -214,51 +220,28 @@ public class Controller3D {
                 }
 
                 if(e.getKeyCode() == KeyEvent.VK_T){
-                    quad.setShader(new Shader() {
-                        @Override
-                        public Col getColor(Vertex pixel) {
-                            int x = (int) Math.round(pixel.getUv().getX() * dioTexture.getWidth() - 1);
-                            int y = (int) Math.round(pixel.getUv().getY() * dioTexture.getHeight() - 1);
-
-                            if(x < 0 || x > dioTexture.getWidth() || y < 0 || y > dioTexture.getHeight()) return new Col(0xff0000);
-                            return new Col(dioTexture.getRGB(x,y));
-                        }
-                    });
+                    activeSolid = solids.get(activeIndex);
+                    activeSolid.setShowTexture(!activeSolid.isShowTexture());
+                    System.out.println("Textura " + (activeSolid.isShowTexture() ? "ZAPNUTA" : "VYPNUTA"));
+                    drawScene();
                 }
 
-                if(e.getKeyCode() == KeyEvent.VK_P){
-                    quad.setShader(new Shader() {
-                        @Override
-                        public Col getColor(Vertex pixel) {
-                           Col pixelColor = new Col(255, 255, 255);
+                if (e.getKeyCode() == KeyEvent.VK_M) {
+                    if (currentRenderer == rendererSolid) {
+                        currentRenderer = rendererWireframe;
+                        System.out.println("Mód renderování: WIREFRAME");
+                    } else {
+                        currentRenderer = rendererSolid;
+                        System.out.println("Mód renderování: SOLID");
+                    }
+                }
 
-                            // Ambient
-                            Col ambientColor = new Col(50, 20, 20);
-
-                            // Diffuse
-                            Col diffuseColor = new Col(0, 255, 0);
-
-                            // Mám možnost počítat ve worldSpace nebo viewSpace
-                            // všechny proměnné, které vstupují do výpočtu, musí být ve správných souřadnicích
-                            // pokud zrcadlová složka nn, stačí worldSpace
-
-                            Point3D lightPosition = new Point3D(0, 0, 0.5); // worldSpace
-                            // počítání normály v modelu TODO
-                            Vec3D normal = pixel.getNormal().normalized().get(); // worldSpace
-                            // Vec3D lightVector = pixel.getPositionWorldSpace(); // musí být ve worldSpace
-
-                            // Spočíáme uhel mezi normálou a lightVectorem
-                            // TODO: double lDotN = Math.max(0,lightVector.dot(normal));
-
-                            // TODO: vektor ke světlu = pozice světla - pozice vertexu (vertex je raster)
-
-                           return pixelColor.mul(ambientColor.add(diffuseColor.mul(lDotN)));
-                        }
-                    });
+                if(e.getKeyCode() == KeyEvent.VK_L){
+                  useLighting = !useLighting;
+                    System.out.println("Světlo je: " + (useLighting ? "Zapnuto" : "Vypnuto"));
                 }
 
                 drawScene();
-
             }
         });
     }
@@ -267,31 +250,83 @@ public class Controller3D {
     private void drawScene() {
         // clear rasteru
         panel.getRaster().clear();
-        zBuffer.getDepthBuffer().clear();
-
-        renderer.setView(camera.getViewMatrix());
-        renderer.setProj(proj);
+        zBuffer.clear(new Col(0,0,0));
 
         rendererSolid.setView(camera.getViewMatrix());
         rendererSolid.setProj(proj);
 
-        rendererSolid.render(arrow);
-        rendererSolid.render(quad);
+        rendererWireframe.setView(camera.getViewMatrix());
+        rendererWireframe.setProj(proj);
 
-        // renderovaní os
-        renderer.render(axisX);
-        renderer.render(axisY);
-        renderer.render(axisZ);
-        //renderovaní všech těles
-//        for (int i = 0; i < solids.size(); i++) {
-//            Solid solid = solids.get(i);
-//            if (i == activeIndex) {
-//                solid.setColor(new Col(0.0, 1.0, 0.0));
-//            } else {
-//                solid.setColor(new Col(1.0, 1.0, 1.0));
-//            }
-//            renderer.render(solid);
-//        }
+        Point3D currentLightPos = new Point3D(0, 0, 0).mul(lightBulb.getModel());
+
+        for (int i = 0; i < solids.size(); i++) {
+            Solid solid = solids.get(i);
+            boolean isActive = (i == activeIndex);
+
+            if (solid == lightBulb) {
+                if (isActive) {
+                    solid.setShader(new ShaderConstant(new Col(0, 255, 0)));
+                } else {
+                    solid.setShader(new ShaderConstant(diffuseLightColor));
+                }
+                currentRenderer.render(solid);
+                continue;
+            }
+
+            solid.setShader(new Shader() {
+                @Override
+                public Col getColor(Vertex pixel) {
+
+                    Col baseColor;
+                    boolean hasTexture = solid.isShowTexture() && solid.getTexture() != null;
+
+                    if (hasTexture) {
+                        // Vykreslení textury
+                        int x = (int) Math.round(pixel.getUv().getX() * (solid.getTexture().getWidth() - 1));
+                        int y = (int) Math.round(pixel.getUv().getY() * (solid.getTexture().getHeight() - 1));
+                        baseColor = solid.getTexture().getValue(x, y).orElse(new Col(0, 0, 0));
+
+                        if (isActive) {
+                            baseColor = baseColor.add(new Col(0, 80, 0)).saturate();
+                        }
+                    } else {
+                        if (isActive) {
+                            baseColor = new Col(0, 255, 0);
+                        } else {
+                            baseColor = pixel.getColor();
+                        }
+                    }
+                    if (useLighting) {
+                        Point3D pixelPos = pixel.getPositionWorldSpace();
+                        Vec3D normal = pixel.getNormal().normalized().orElse(new Vec3D(0, 1, 0));
+
+                        Vec3D lightDir = new Vec3D(
+                                currentLightPos.getX() - pixelPos.getX(),
+                                currentLightPos.getY() - pixelPos.getY(),
+                                currentLightPos.getZ() - pixelPos.getZ()
+                        ).normalized().orElse(new Vec3D(0, 1, 0));
+
+                        double nDotL = Math.max(0, normal.dot(lightDir));
+
+                        Col diffusePart = diffuseLightColor.mul(nDotL);
+                        Col finalLight = ambientLightColor.add(diffusePart).saturate();
+
+                        return baseColor.mul(finalLight).saturate();
+                    }
+                    return baseColor;
+                }
+            });
+            currentRenderer.render(solid);
+        }
+
+        axes.setShader(new Shader() {
+            @Override
+            public Col getColor(Vertex pixel) {
+                return pixel.getColor();
+            }
+        });
+        currentRenderer.render(axes);
 
         panel.repaint();
     }
@@ -311,7 +346,8 @@ public class Controller3D {
             proj = new Mat4OrthoRH(width, height, 0.1, 100);
         }
 
-        renderer.setProj(proj);
+        rendererSolid.setProj(proj);
+        rendererWireframe.setProj(proj);
     }
 
 

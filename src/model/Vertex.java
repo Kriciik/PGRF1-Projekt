@@ -8,10 +8,26 @@ public class Vertex implements Vectorizable<Vertex> {
     private final Col color;
     private final Vec2D uv;
     private final Vec3D normal;
-    // TODO: one
+
+    public Vertex(Point3D position, Point3D positionWorldSpace, Col color, Vec2D uv, Vec3D normal) {
+        this.position = position;
+        this.positionWorldSpace = positionWorldSpace;
+        this.color = color;
+        this.uv = uv;
+        this.normal = normal;
+    }
+
+    public Vertex(Point3D position, Col color, Vec2D uv) {
+        this.position = position;
+        this.positionWorldSpace = position;
+        this.color = color;
+        this.uv = uv;
+        this.normal = new Vec3D(0, 0, 1);
+    }
 
     public Vertex(Point3D position, Col color, Vec2D uv, Vec3D normal) {
         this.position = position;
+        this.positionWorldSpace = position;
         this.color = color;
         this.uv = uv;
         this.normal = normal;
@@ -19,6 +35,7 @@ public class Vertex implements Vectorizable<Vertex> {
 
     public Vertex(double x, double y, double z) {
         this.position = new Point3D(x, y, z);
+        this.positionWorldSpace = this.position;
         this.color = new Col(0xffffff);
         this.uv = new Vec2D(0, 0);
         this.normal = new Vec3D(0, 0, 1);
@@ -26,6 +43,7 @@ public class Vertex implements Vectorizable<Vertex> {
 
     public Vertex(double x, double y, double z, Col color) {
         this.position = new Point3D(x, y, z);
+        this.positionWorldSpace = this.position;
         this.color = color;
         this.uv = new Vec2D(0, 0);
         this.normal = new Vec3D(0, 0, 1);
@@ -33,6 +51,7 @@ public class Vertex implements Vectorizable<Vertex> {
 
     public Vertex(Point3D position, Col color) {
         this.position = position;
+        this.positionWorldSpace = position; // OPRAVENO
         this.color = color;
         this.uv = new Vec2D(0, 0);
         this.normal = new Vec3D(0, 0, 1);
@@ -40,6 +59,10 @@ public class Vertex implements Vectorizable<Vertex> {
 
     public Point3D getPosition() {
         return position;
+    }
+
+    public Point3D getPositionWorldSpace() {
+        return positionWorldSpace;
     }
 
     public Col getColor() {
@@ -68,6 +91,7 @@ public class Vertex implements Vectorizable<Vertex> {
     public Vertex mul(double d) {
         return new Vertex(
                 position.mul(d),
+                positionWorldSpace.mul(d),
                 color.mul(d),
                 uv.mul(d),
                 normal.mul(d)
@@ -78,11 +102,10 @@ public class Vertex implements Vectorizable<Vertex> {
     public Vertex add(Vertex v) {
         return new Vertex(
                 position.add(v.getPosition()),
+                positionWorldSpace.add(v.getPositionWorldSpace()),
                 color.add(v.getColor()),
                 uv.add(v.getUv()),
                 normal.add(v.getNormal())
         );
     }
-
-    //TODO: dehomo, transformToWindow -> vratí vertex, atd. (možný todo)
 }

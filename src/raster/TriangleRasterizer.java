@@ -1,10 +1,14 @@
 package raster;
 
 import model.Vertex;
-import transforms.Point3D;
+import shader.Shader;
 
-public abstract class TriangleRasterizer{
-    //TODO: úkol na doma
-    ZBuffer zBuffer;
-    public abstract void rasterize(Vertex a,  Vertex b, Vertex c);
+public abstract class TriangleRasterizer {
+    protected final ZBuffer zBuffer;
+
+    public TriangleRasterizer(ZBuffer zBuffer) {
+        this.zBuffer = zBuffer;
+    }
+
+    public abstract void rasterize(Vertex a, Vertex b, Vertex c, Shader shader);
 }

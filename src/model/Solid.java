@@ -1,5 +1,6 @@
 package model;
 
+import raster.RasterBufferedImage;
 import shader.Shader;
 import shader.ShaderConstant;
 import transforms.Mat4;
@@ -15,6 +16,9 @@ public abstract class Solid {
     protected final List<Integer> indexBuffer;
     protected final List<SolidPart> partBuffer;
     private Mat4 modelMat;
+    protected RasterBufferedImage texture = null;
+    protected boolean showTexture = false;
+
     protected Shader shader = new ShaderConstant();
 
     public Solid(final List<Vertex> vertexBuffer, final List<Integer> indexBuffer,
@@ -24,6 +28,14 @@ public abstract class Solid {
         this.partBuffer = partBuffer;
         this.modelMat = modelMat;
     }
+    public RasterBufferedImage getTexture() { return texture; }
+
+    public void setTexture(RasterBufferedImage texture) { this.texture = texture; }
+
+    public boolean isShowTexture() { return showTexture; }
+
+    public void setShowTexture(boolean showTexture) { this.showTexture = showTexture; }
+
     public List<Vertex> getVertexBuffer() {
         return vertexBuffer;
     }
