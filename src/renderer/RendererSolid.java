@@ -52,7 +52,6 @@ public class RendererSolid implements Renderer {
                         if (aT != null && bT != null) {
                             Col lineColor = solid.getShader().getColor(a);
 
-                            // Možnost A: Tvá knihovna bere barvu přímo v metodě rasterize
                             lineRasterizer.rasterize((int) Math.round(aT.getX()), (int) Math.round(aT.getY()), (int) Math.round(bT.getX()), (int) Math.round(bT.getY()), lineColor);
 
 
